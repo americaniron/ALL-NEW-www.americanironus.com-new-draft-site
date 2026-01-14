@@ -1,0 +1,8 @@
+{
+  "name": "American Iron LLC - Enterprise Heavy Equipment & Parts Portal",
+  "description": "An enterprise-grade React application for a heavy construction equipment dealer, featuring a searchable parts database, equipment inventory, and AI-powered equipment concierge.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
