@@ -1,69 +1,133 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Strictly follow Google GenAI SDK initialization guidelines
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Initialize AI client
+const getAiClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-export const getEquipmentRecommendation = async (userPrompt: string): Promise<string> => {
+/**
+ * Fast AI response using Gemini 2.5 Flash Lite
+ */
+export const getFastRecommendation = async (userPrompt: string): Promise<string> => {
+  const ai = getAiClient();
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `You are an expert heavy machinery consultant for American Iron LLC. 
-      Recommend specific construction equipment (Excavators, Dozers, Loaders, etc.) for the following job description: 
-      "${userPrompt}". 
-      Provide your reasoning and suggest 1-2 types of machines. Keep it professional and concise.`,
-      config: {
-          temperature: 0.7,
-          // Removed redundant maxOutputTokens as per guidelines to prevent blocking
-      }
+      model: 'gemini-2.5-flash-lite-latest',
+      contents: `You are a fast-response fleet assistant for American Iron LLC. 
+      Briefly advise on: "${userPrompt}". 
+      Keep it under 3 sentences.`,
     });
-    // Property access .text instead of method .text()
-    return response.text || "I'm sorry, I couldn't generate a recommendation at this time. Please contact our support team.";
+    return response.text || "No recommendation available.";
   } catch (error) {
-    console.error("Gemini Error:", error);
-    return "I'm currently undergoing maintenance. Please check our inventory manually or call (850) 777-3797.";
+    console.error("Flash Lite Error:", error);
+    return "Quick analysis offline.";
   }
 };
 
-export const getShippingQuoteSimulation = async (origin: string, destination: string, weight: number): Promise<string> => {
+/**
+ * Complex Strategic Thinking using Gemini 3 Pro Preview
+ */
+export const getStrategicAnalysis = async (userPrompt: string): Promise<string> => {
+  const ai = getAiClient();
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-pro-preview',
+      contents: `Analyze this complex heavy equipment fleet strategy or maintenance scenario for American Iron LLC: 
+      "${userPrompt}". 
+      Provide a detailed, multi-step technical analysis and strategic roadmap.`,
+      config: {
+        thinkingConfig: { thinkingBudget: 32768 }
+      }
+    });
+    return response.text || "Strategic analysis failed.";
+  } catch (error) {
+    console.error("Pro Thinking Error:", error);
+    return "Strategic brain is currently offline.";
+  }
+};
+
+/**
+ * Image Generation with specific aspect ratios using Gemini 3 Pro Image
+ */
+export const generateEquipmentVisual = async (prompt: string, aspectRatio: string): Promise<{imageUrl: string, text: string}> => {
+  const ai = getAiClient();
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-pro-image-preview',
+      contents: {
+        parts: [{ text: `High-quality industrial photography for American Iron LLC: ${prompt}. Professional, cinematic construction site lighting, realistic detail.` }]
+      },
+      config: {
+        imageConfig: {
+          aspectRatio: aspectRatio as any,
+          imageSize: "1K"
+        }
+      }
+    });
+
+    let imageUrl = "";
+    let text = "";
+
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
+      if (part.inlineData) {
+        imageUrl = `data:image/png;base64,${part.inlineData.data}`;
+      } else if (part.text) {
+        text = part.text;
+      }
+    }
+
+    return { imageUrl, text };
+  } catch (error) {
+    console.error("Image Gen Error:", error);
+    throw error;
+  }
+};
+
+/**
+ * Location-based search using Google Maps Grounding
+ */
+export const findLocalService = async (query: string, lat?: number, lng?: number): Promise<{text: string, sources: any[]}> => {
+  const ai = getAiClient();
+  try {
+    const config: any = {
+      tools: [{ googleMaps: {} }],
+    };
+
+    if (lat !== undefined && lng !== undefined) {
+      config.toolConfig = {
+        retrievalConfig: {
+          latLng: { latitude: lat, longitude: lng }
+        }
+      };
+    }
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `Find heavy equipment service centers, parts dealers, or rental yards related to: "${query}". 
+      Provide contact info and location highlights.`,
+      config
+    });
+
+    return {
+      text: response.text || "No results found.",
+      sources: response.candidates?.[0]?.groundingMetadata?.groundingChunks || []
+    };
+  } catch (error) {
+    console.error("Maps Grounding Error:", error);
+    return { text: "Location services unavailable.", sources: [] };
+  }
+};
+
+// Existing parts recommendation updated to use Flash for speed
+export const getPartsRecommendation = async (query: string): Promise<string> => {
+  const ai = getAiClient();
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Simulate a shipping logistics summary for a heavy equipment part. 
-      Origin: ${origin}. Destination: ${destination}. Weight: ${weight}kg. 
-      Estimate costs for UPS and DHL. Return a JSON summary of estimated costs and delivery times.`,
-      config: {
-          responseMimeType: "application/json",
-          // Configured responseSchema for reliable structured output
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              ups: {
-                type: Type.OBJECT,
-                properties: {
-                  service: { type: Type.STRING },
-                  cost: { type: Type.NUMBER },
-                  time: { type: Type.STRING }
-                },
-                required: ['service', 'cost', 'time']
-              },
-              dhl: {
-                type: Type.OBJECT,
-                properties: {
-                  service: { type: Type.STRING },
-                  cost: { type: Type.NUMBER },
-                  time: { type: Type.STRING }
-                },
-                required: ['service', 'cost', 'time']
-              }
-            },
-            required: ['ups', 'dhl']
-          }
-      }
+      contents: `Expert parts assistant search: "${query}". Provide technical application details.`,
     });
-    return response.text || "{}";
+    return response.text || "Part lookup unavailable.";
   } catch (error) {
-    console.error("Gemini Shipping Simulation Error:", error);
-    return "{}";
+    console.error("Gemini Error:", error);
+    return "Database under maintenance.";
   }
 };

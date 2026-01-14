@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { getEquipmentRecommendation } from '../services/geminiService';
+import { getFastRecommendation, getStrategicAnalysis } from '../services/geminiService';
 import { useData } from '../DataContext';
 
 const Home: React.FC = () => {
@@ -10,127 +10,170 @@ const Home: React.FC = () => {
   const [aiPrompt, setAiPrompt] = React.useState('');
   const [aiResult, setAiResult] = React.useState('');
   const [isAiLoading, setIsAiLoading] = React.useState(false);
+  const [mode, setMode] = React.useState<'fast' | 'think'>('fast');
 
   const handleAiInquiry = async () => {
     if (!aiPrompt) return;
     setIsAiLoading(true);
     setAiResult('');
-    const recommendation = await getEquipmentRecommendation(aiPrompt);
-    setAiResult(recommendation);
-    setIsAiLoading(false);
+    
+    try {
+      if (mode === 'think') {
+        const result = await getStrategicAnalysis(aiPrompt);
+        setAiResult(result);
+      } else {
+        const result = await getFastRecommendation(aiPrompt);
+        setAiResult(result);
+      }
+    } catch (err) {
+      setAiResult("System overload. Please retry.");
+    } finally {
+      setIsAiLoading(false);
+    }
   };
 
   return (
     <div className="space-y-16">
       {/* Hero Section */}
       <section 
-        className="relative h-[600px] bg-cover bg-center flex items-center" 
+        className="relative h-[650px] bg-cover bg-center flex items-center overflow-hidden" 
         style={{ backgroundImage: "url('https://images.unsplash.com/photo-1541888941295-184a621d4693?q=80&w=1600&auto=format&fit=crop')" }}
       >
-        <div className="absolute inset-0 bg-[#111111] bg-opacity-60"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#111111] via-[#111111cc] to-transparent"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-white">
-          <h1 className="text-4xl md:text-6xl font-extrabold uppercase tracking-tight leading-tight">
-            {copy.homeHeroTitle.split('.')[0]}.<br/>
-            <span className="text-[#FFCC00]">{copy.homeHeroTitle.split('.')[1] || ''}</span>
-          </h1>
-          <p className="mt-6 text-xl max-w-2xl font-light text-gray-300">
-            {copy.homeHeroSubtitle}
-          </p>
-          <div className="mt-10 flex flex-wrap gap-4">
-            <Link to="/equipment-list" className="bg-[#FFCC00] text-[#111111] px-8 py-3 font-bold uppercase tracking-widest hover:bg-white transition-colors">
-              Machinery Inventory
-            </Link>
-            <Link to="/quote" className="bg-white text-[#111111] px-8 py-3 font-bold uppercase tracking-widest hover:bg-[#FFCC00] transition-colors">
-              Procurement Quote
-            </Link>
-            <button 
-                onClick={() => setShowAiModal(true)}
-                className="border-2 border-[#FFCC00] text-[#FFCC00] px-8 py-3 font-bold uppercase tracking-widest hover:bg-[#FFCC00] hover:text-[#111111] transition-all"
-            >
-              ✨ AI Concierge
-            </button>
+          <div className="max-w-3xl">
+            <h1 className="text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.9]">
+              {copy.homeHeroTitle.split('.')[0]}.<br/>
+              <span className="text-[#FFCC00]">{copy.homeHeroTitle.split('.')[1] || ''}</span>
+            </h1>
+            <p className="mt-8 text-xl max-w-2xl font-light text-gray-300 leading-relaxed">
+              {copy.homeHeroSubtitle}
+            </p>
+            <div className="mt-12 flex flex-wrap gap-4">
+              <Link to="/equipment-list" className="bg-[#FFCC00] text-[#111111] px-10 py-4 font-black uppercase tracking-widest hover:bg-white transition-colors shadow-2xl">
+                Inventory
+              </Link>
+              <button 
+                  onClick={() => setShowAiModal(true)}
+                  className="bg-white text-[#111111] px-10 py-4 font-black uppercase tracking-widest hover:bg-[#FFCC00] transition-all flex items-center"
+              >
+                <i className="fas fa-robot mr-3"></i> AI Concierge
+              </button>
+              <Link to="/ai-visualizer" className="border-2 border-white text-white px-10 py-4 font-black uppercase tracking-widest hover:bg-white hover:text-[#111111] transition-all">
+                ✨ Visualizer
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
+      {/* Feature Navigation Bar */}
+      <div className="max-w-7xl mx-auto px-4 -mt-16 relative z-10 grid grid-cols-1 md:grid-cols-3 gap-1 shadow-2xl">
+        <Link to="/dealer-search" className="bg-[#111111] p-10 text-white flex justify-between items-center group border-b-4 border-[#FFCC00]">
+          <div>
+            <div className="text-[10px] font-black text-[#FFCC00] uppercase tracking-[0.3em] mb-2">Service Network</div>
+            <div className="text-xl font-extrabold uppercase group-hover:translate-x-2 transition-transform">Dealer Locator</div>
+          </div>
+          <i className="fas fa-location-dot text-2xl opacity-20 group-hover:opacity-100 transition-opacity"></i>
+        </Link>
+        <Link to="/shipping" className="bg-[#1a1a1a] p-10 text-white flex justify-between items-center group border-b-4 border-white">
+          <div>
+            <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-2">Global Forwarding</div>
+            <div className="text-xl font-extrabold uppercase group-hover:translate-x-2 transition-transform">Logistics Portal</div>
+          </div>
+          <i className="fas fa-ship text-2xl opacity-20 group-hover:opacity-100 transition-opacity"></i>
+        </Link>
+        <Link to="/parts-list" className="bg-[#222222] p-10 text-white flex justify-between items-center group border-b-4 border-gray-600">
+          <div>
+            <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-2">Technical Registry</div>
+            <div className="text-xl font-extrabold uppercase group-hover:translate-x-2 transition-transform">Parts Catalog</div>
+          </div>
+          <i className="fas fa-gears text-2xl opacity-20 group-hover:opacity-100 transition-opacity"></i>
+        </Link>
+      </div>
+
       {/* Intro Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div>
-                <h2 className="text-3xl font-extrabold uppercase mb-6 border-l-4 border-[#FFCC00] pl-4 text-[#111111]">The Strategic Advantage</h2>
-                <p className="text-gray-600 leading-relaxed mb-6">
+                <h2 className="text-[40px] font-black uppercase mb-8 border-l-8 border-[#FFCC00] pl-6 text-[#111111] leading-none">The Iron Strategy</h2>
+                <p className="text-gray-600 leading-relaxed text-lg mb-8 font-medium">
                     American Iron LLC is the strategic partner for fleet managers and contractors who demand reliability. In an industry where downtime destroys margins, we provide a robust supply chain solution for heavy equipment and critical components.
                 </p>
-                <p className="text-gray-600 leading-relaxed">
-                    Based in Tampa with a global reach, we connect enterprise-level buyers with high-quality machinery, ensuring your projects stay on schedule and your iron stays moving.
-                </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gray-50 p-6 border-t-4 border-[#FFCC00]">
-                    <i className="fas fa-helmet-safety text-3xl mb-4 text-[#111111]"></i>
-                    <h3 className="font-bold uppercase mb-2 text-[#111111]">Asset Recovery</h3>
-                    <p className="text-sm text-gray-500">Turning aging assets into critical supply inventory through precision dismantling.</p>
-                </div>
-                <div className="bg-gray-50 p-6 border-t-4 border-[#FFCC00]">
-                    <i className="fas fa-globe text-3xl mb-4 text-[#111111]"></i>
-                    <h3 className="font-bold uppercase mb-2 text-[#111111]">Global Export</h3>
-                    <p className="text-sm text-gray-500">Executing seamless delivery to any job site on the map, across any border.</p>
+                <div className="grid grid-cols-2 gap-8">
+                  <div>
+                    <div className="text-4xl font-black text-[#111111] mb-2">45+</div>
+                    <div className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Countries Exported</div>
+                  </div>
+                  <div>
+                    <div className="text-4xl font-black text-[#111111] mb-2">24/7</div>
+                    <div className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Procurement Support</div>
+                  </div>
                 </div>
             </div>
-        </div>
-      </section>
-
-      {/* Services Grid */}
-      <section className="bg-gray-100 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-extrabold uppercase mb-12 text-center text-[#111111]">Core Industrial Services</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {[
-                    { title: 'Dismantling', icon: 'fa-industry', desc: 'Expert harvest of key components including engines and hydraulics.' },
-                    { title: 'Inspections', icon: 'fa-clipboard-check', desc: 'Data-driven condition reports and high-definition documentation.' },
-                    { title: 'Heavy Haul', icon: 'fa-truck', desc: 'Domestic pickup and port drayage coordination for oversize units.' },
-                    { title: 'Forwarding', icon: 'fa-ship', desc: 'Complex international logistics and export documentation management.' }
-                ].map((s, idx) => (
-                    <div key={idx} className="bg-white p-8 text-center shadow-sm hover:shadow-lg transition-shadow group">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-[#FFCC00] transition-colors">
-                            <i className={`fas ${s.icon} text-2xl text-[#111111]`}></i>
-                        </div>
-                        <h3 className="font-extrabold uppercase mb-4 tracking-tighter text-[#111111]">{s.title}</h3>
-                        <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
-                    </div>
-                ))}
+            <div className="relative group">
+              <div className="absolute -inset-4 bg-[#FFCC00] opacity-10 group-hover:opacity-20 transition-opacity"></div>
+              <img src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=800" className="relative shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-700" alt="Industrial" />
             </div>
         </div>
       </section>
 
       {/* AI Modal */}
       {showAiModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#111111] bg-opacity-80">
-          <div className="bg-white w-full max-w-xl p-8 rounded-lg border-t-8 border-[#FFCC00] relative">
-            <button onClick={() => setShowAiModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-[#111111]">
-                <i className="fas fa-times text-xl"></i>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#111111] bg-opacity-90 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-2xl p-0 rounded-sm border-t-8 border-[#FFCC00] relative overflow-hidden shadow-2xl">
+            <button onClick={() => setShowAiModal(false)} className="absolute top-4 right-4 z-10 text-gray-400 hover:text-[#111111] transition-colors">
+                <i className="fas fa-times text-2xl"></i>
             </button>
-            <h3 className="text-2xl font-extrabold uppercase mb-4 text-[#111111]">✨ AI Equipment Concierge</h3>
-            <p className="text-sm text-gray-500 mb-6 uppercase tracking-widest font-bold">Describe your project requirements</p>
-            <textarea 
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                rows={4} 
-                className="w-full border-gray-200 focus:ring-[#FFCC00] focus:border-[#FFCC00] rounded-md p-4 text-gray-800"
-                placeholder="e.g., 'I need to dig a 500ft utility trench in rocky terrain in Arizona...'"
-            />
-            <button 
-                onClick={handleAiInquiry}
-                disabled={isAiLoading}
-                className="w-full mt-4 bg-[#111111] text-white py-4 font-bold uppercase tracking-widest hover:bg-[#FFCC00] hover:text-[#111111] transition-all disabled:bg-gray-400"
-            >
-              {isAiLoading ? 'Analyzing Fleet...' : 'Generate Recommendation'}
-            </button>
-            {aiResult && (
-                <div className="mt-8 p-6 bg-gray-50 border-l-4 border-[#FFCC00] text-sm leading-relaxed text-gray-700 animate-fade-in">
-                    {aiResult}
-                </div>
-            )}
+            
+            <div className="bg-gray-50 p-8 border-b border-gray-100">
+              <h3 className="text-3xl font-black uppercase tracking-tight text-[#111111]">✨ Intelligence Hub</h3>
+              <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-[0.3em] font-black">AI-Powered Fleet Consulting</p>
+            </div>
+
+            <div className="p-8">
+              <div className="flex bg-gray-100 p-1 mb-6 rounded-sm">
+                <button 
+                  onClick={() => setMode('fast')}
+                  className={`flex-grow py-3 text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'fast' ? 'bg-[#111111] text-white shadow-lg' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  <i className="fas fa-bolt mr-2"></i> Fast Analysis
+                </button>
+                <button 
+                  onClick={() => setMode('think')}
+                  className={`flex-grow py-3 text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'think' ? 'bg-[#111111] text-white shadow-lg' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  <i className="fas fa-brain mr-2"></i> Strategic Deep Think
+                </button>
+              </div>
+
+              <textarea 
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  rows={4} 
+                  className="w-full border-2 border-gray-100 focus:border-[#FFCC00] focus:ring-0 p-6 text-gray-800 font-bold text-lg mb-6 outline-none transition-colors"
+                  placeholder={mode === 'fast' ? "Quick question about specs or parts..." : "Describe a complex strategic challenge or multi-unit maintenance roadmap..."}
+              />
+              
+              <button 
+                  onClick={handleAiInquiry}
+                  disabled={isAiLoading}
+                  className="w-full bg-[#FFCC00] text-[#111111] py-5 font-black uppercase tracking-[0.2em] text-xs hover:bg-[#111111] hover:text-white transition-all disabled:opacity-50 shadow-xl"
+              >
+                {isAiLoading ? 'Synthesizing Response...' : mode === 'fast' ? 'Execute Fast Query' : 'Begin Deep Strategic Analysis'}
+              </button>
+
+              {aiResult && (
+                  <div className={`mt-10 p-8 border-l-8 border-[#FFCC00] text-sm leading-relaxed text-gray-700 animate-fade-in ${mode === 'think' ? 'bg-[#111111] text-white' : 'bg-gray-50'}`}>
+                    <div className="text-[9px] font-black uppercase tracking-[0.4em] mb-4 text-[#FFCC00]">
+                      {mode === 'think' ? 'Deep Strategic Analysis Result' : 'Operational Insight'}
+                    </div>
+                    <div className="whitespace-pre-wrap font-medium">
+                      {aiResult}
+                    </div>
+                  </div>
+              )}
+            </div>
           </div>
         </div>
       )}
