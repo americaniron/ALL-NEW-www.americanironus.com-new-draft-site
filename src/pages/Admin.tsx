@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '../DataContext';
@@ -18,11 +17,10 @@ const Admin: React.FC = () => {
 
   // Equipment Form State
   const [newEq, setNewEq] = useState<Partial<DetailedEquipmentListing>>({
-    id: '', make: 'CAT', model: '', year: new Date().getFullYear(), price: '', city: '', state: '', category: 'EXCAVATORS', meter: '0 Hours', img: ''
+    id: '', make: '', model: '', year: 2024, price: '', city: '', state: '', category: 'EXCAVATORS', meter: '0 Hours', img: ''
   });
   const [eqImagePrompt, setEqImagePrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generationError, setGenerationError] = useState<string | null>(null);
 
   // Login check
   const handleLogin = (e: React.FormEvent) => {
@@ -33,44 +31,28 @@ const Admin: React.FC = () => {
 
   const handleAddEquipment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newEq.id || !newEq.make || !newEq.model) {
-      alert('Please provide at least a Stock ID, Make, and Model.');
-      return;
-    }
+    if (!newEq.id || !newEq.make) return;
     addEquipment({
       ...newEq,
-      img: newEq.img || 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=800',
+      img: newEq.img || 'https://via.placeholder.com/800x600?text=No+Image',
       title: `${newEq.year} ${newEq.make} ${newEq.model}`,
-      description: 'Factory certified unit ready for deployment. Full service history available. Subject to prior sale.',
-      specs: [
-        { label: 'Stock #', value: newEq.id },
-        { label: 'Year', value: String(newEq.year) },
-        { label: 'Hours', value: newEq.meter || '0' }
-      ],
-      features: ['Verified Service History', 'Export Ready', 'Fleet Maintained', 'Financing Available']
+      description: 'Factory certified unit ready for deployment.',
+      specs: [],
+      features: ['Ready to Work']
     } as DetailedEquipmentListing);
-    setNewEq({ id: '', make: 'CAT', model: '', year: new Date().getFullYear(), price: '', city: '', state: '', category: 'EXCAVATORS', meter: '0 Hours', img: '' });
-    setEqImagePrompt('');
+    setNewEq({ id: '', make: '', model: '', year: 2024, price: '', city: '', state: '', category: 'EXCAVATORS', meter: '0 Hours', img: '' });
     alert('Asset added to fleet.');
   };
 
   const generateImage = async () => {
-    const defaultPrompt = `${newEq.year || ''} ${newEq.make || ''} ${newEq.model || ''}, clean, on a plain white studio background, high-resolution industrial photograph.`;
-    const finalPrompt = eqImagePrompt.trim() || defaultPrompt;
-
-    if (!newEq.make || !newEq.model) {
-      alert("Please provide at least a Make and Model before generating an image.");
-      return;
-    }
-    
+    if (!eqImagePrompt) return;
     setIsGenerating(true);
-    setGenerationError(null);
     try {
-      const { imageUrl } = await generateEquipmentVisual(finalPrompt, '4:3', '1K');
+      const { imageUrl } = await generateEquipmentVisual(eqImagePrompt, '16:9');
       setNewEq({ ...newEq, img: imageUrl });
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
-      setGenerationError(`AI Generation Failed: ${e.message}. High-quality image models often require a paid API key.`);
+      alert('AI Generation Failed');
     } finally {
       setIsGenerating(false);
     }
@@ -150,7 +132,7 @@ const Admin: React.FC = () => {
                   placeholder="Year" 
                   type="number"
                   value={newEq.year}
-                  onChange={e => setNewEq({...newEq, year: parseInt(e.target.value) || new Date().getFullYear()})}
+                  onChange={e => setNewEq({...newEq, year: parseInt(e.target.value)})}
                 />
                 <input 
                   className="w-full border border-gray-200 p-3 text-sm font-bold" 
@@ -173,7 +155,7 @@ const Admin: React.FC = () => {
                 <div className="flex gap-2 mb-2">
                   <input 
                     className="w-full border border-gray-200 p-2 text-xs" 
-                    placeholder="Or describe a custom scene..."
+                    placeholder="Describe asset visual..."
                     value={eqImagePrompt}
                     onChange={e => setEqImagePrompt(e.target.value)}
                   />
@@ -183,16 +165,11 @@ const Admin: React.FC = () => {
                     disabled={isGenerating}
                     className="bg-[#111111] text-white px-3 py-2 text-[9px] font-black uppercase hover:bg-[#FFCC00] hover:text-black transition-all"
                   >
-                    {isGenerating ? <i className="fas fa-spinner fa-spin"></i> : 'Gen'}
+                    {isGenerating ? '...' : 'Gen'}
                   </button>
                 </div>
-                {generationError && (
-                    <div className="mt-2 p-2 bg-red-100 text-red-700 text-xs font-bold border border-red-200">
-                        {generationError}
-                    </div>
-                )}
-                {newEq.img && !generationError && (
-                  <img src={newEq.img} alt="Generated" className="w-full aspect-[4/3] object-cover border border-gray-200 mt-2" />
+                {newEq.img && (
+                  <img src={newEq.img} alt="Generated" className="w-full h-32 object-cover border border-gray-200" />
                 )}
               </div>
 
@@ -209,7 +186,7 @@ const Admin: React.FC = () => {
                {equipment.map(item => (
                  <div key={item.id} className="flex items-center justify-between p-4 border border-gray-100 hover:border-[#FFCC00] transition-colors group">
                    <div className="flex items-center space-x-4">
-                      <img src={item.img} alt={item.model} className="w-16 h-12 object-cover bg-gray-100" />
+                      <img src={item.img} alt={item.model} className="w-12 h-12 object-cover bg-gray-100" />
                       <div>
                         <div className="font-black text-sm uppercase">{item.year} {item.make} {item.model}</div>
                         <div className="text-[10px] text-gray-400 font-mono">{item.id}</div>

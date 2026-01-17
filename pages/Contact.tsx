@@ -7,9 +7,9 @@ const Contact: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         <div className="space-y-12">
             <div>
-                <h1 className="text-4xl font-extrabold uppercase mb-4">Partner with American Iron</h1>
+                <h1 className="text-4xl font-extrabold uppercase mb-4">Initiate Procurement Partnership</h1>
                 <p className="text-gray-600 leading-relaxed">
-                    Efficiency starts with clear communication. Whether you are managing a single site or a multinational fleet, our team is ready to execute your equipment needs.
+                    Streamlined communication channels for high-volume fleet managers. Direct access to decision-makers for immediate asset disposition and acquisition.
                 </p>
             </div>
             

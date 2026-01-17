@@ -1,7 +1,19 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const Quote: React.FC = () => {
+  const location = useLocation();
+  const [details, setDetails] = useState('');
+
+  useEffect(() => {
+    if (location.state && location.state.selectedItems) {
+      const { selectedItems } = location.state as { selectedItems: string[] };
+      const prefill = `Inquiry for the following assets:\n\n- Stock #: ${selectedItems.join('\n- Stock #: ')}\n\nPlease provide a formal quote including availability and freight options.`;
+      setDetails(prefill);
+    }
+  }, [location.state]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-16">
       <div className="text-center mb-12">
@@ -23,10 +35,10 @@ const Quote: React.FC = () => {
 
         <div className="space-y-2">
             <label className="text-xs font-black uppercase text-gray-400">Inventory Type</label>
-            <select className="w-full border-gray-200 focus:border-[#FFCC00] focus:ring-0 p-4 font-bold uppercase text-sm">
+            <select className="w-full border-gray-200 focus:border-[#FFCC00] focus:ring-0 p-4 font-bold uppercase text-sm" defaultValue="Full Machine Inventory">
                 <option>Select Option...</option>
                 <option>Critical Part / Component</option>
-                <option>Full Machine Inventory</option>
+                <option value="Full Machine Inventory">Full Machine Inventory</option>
                 <option>Logistics / Freight Service</option>
                 <option>Dismantling Inquiry</option>
             </select>
@@ -34,7 +46,14 @@ const Quote: React.FC = () => {
 
         <div className="space-y-2">
             <label className="text-xs font-black uppercase text-gray-400">Request Details (Part #s, Model, Serial #)</label>
-            <textarea required rows={6} className="w-full border-gray-200 focus:border-[#FFCC00] focus:ring-0 p-4 font-bold" placeholder="Please provide specific identifiers..."></textarea>
+            <textarea 
+              required 
+              rows={8} 
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+              className="w-full border-gray-200 focus:border-[#FFCC00] focus:ring-0 p-4 font-bold" 
+              placeholder="Please provide specific identifiers..."
+            ></textarea>
         </div>
 
         <button className="w-full bg-black text-white py-5 font-black uppercase tracking-widest hover:bg-[#FFCC00] hover:text-black transition-all shadow-lg">

@@ -2,6 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '../DataContext';
+import { getStrategicAnalysis } from '../services/geminiService';
 
 type CategorySortField = 'name' | 'count';
 type SortDirection = 'asc' | 'desc';
@@ -10,34 +11,25 @@ const LazyCategoryImage = ({ src, alt, className }: { src: string, alt: string, 
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(!src);
   
-  // Placeholder state for broken or missing images
   if (hasError) {
     return (
-      <div className="w-full h-full bg-gray-50 flex flex-col items-center justify-center border border-gray-100/50 rounded-sm">
-        <i className="fas fa-industry text-gray-200 text-5xl mb-3"></i>
-        <div className="text-[7px] font-black uppercase text-gray-400 tracking-[0.4em] text-center px-4">
-          Asset Image Unmapped
-        </div>
-        <div className="absolute bottom-2 right-2 text-[6px] font-mono text-gray-300">ERR_IMG_NULL</div>
+      <div className="w-full h-full bg-white flex flex-col items-center justify-center">
+        <i className="fas fa-camera text-gray-200 text-3xl mb-2"></i>
       </div>
     );
   }
 
   return (
-    <div className={`w-full h-full relative transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`w-full h-full relative transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
       <img 
         src={src} 
         alt={alt} 
         loading="lazy"
+        decoding="async"
         onLoad={() => setIsLoaded(true)}
         onError={() => setHasError(true)}
         className={className} 
       />
-      {!isLoaded && (
-        <div className="absolute inset-0 bg-gray-100 animate-pulse flex items-center justify-center">
-          <i className="fas fa-industry text-gray-200 text-3xl"></i>
-        </div>
-      )}
     </div>
   );
 };
@@ -46,8 +38,12 @@ const Equipment: React.FC = () => {
   const { categories, equipment } = useData();
   const [sortField, setSortField] = useState<CategorySortField>('name');
   const [sortDir, setSortDir] = useState<SortDirection>('asc');
+  
+  // AI State
+  const [aiInsight, setAiInsight] = useState<string | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
-  // Aggregate asset counts for each category to provide real-time inventory depth
+  // Aggregate asset counts
   const categoryStats = useMemo(() => {
     const stats: Record<string, number> = {};
     equipment.forEach(item => {
@@ -56,24 +52,21 @@ const Equipment: React.FC = () => {
     return stats;
   }, [equipment]);
 
-  // Handle sorting logic for categories
+  // Sort Logic
   const sortedCategories = useMemo(() => {
-    return [...categories].sort((a, b) => {
-      let valA: string | number;
-      let valB: string | number;
-
+    const sorted = [...categories];
+    sorted.sort((a, b) => {
       if (sortField === 'name') {
-        valA = a.name.toLowerCase();
-        valB = b.name.toLowerCase();
+        const result = a.name.localeCompare(b.name);
+        return sortDir === 'asc' ? result : -result;
       } else {
-        valA = categoryStats[a.name] || 0;
-        valB = categoryStats[b.name] || 0;
+        const countA = categoryStats[a.name] || 0;
+        const countB = categoryStats[b.name] || 0;
+        if (countA !== countB) return sortDir === 'asc' ? countA - countB : countB - countA;
+        return a.name.localeCompare(b.name);
       }
-
-      if (valA < valB) return sortDir === 'asc' ? -1 : 1;
-      if (valA > valB) return sortDir === 'asc' ? 1 : -1;
-      return 0;
     });
+    return sorted;
   }, [categories, sortField, sortDir, categoryStats]);
 
   const toggleSort = (field: CategorySortField) => {
@@ -81,149 +74,120 @@ const Equipment: React.FC = () => {
       setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      setSortDir('asc');
+      setSortDir(field === 'count' ? 'desc' : 'asc');
     }
   };
 
-  const getSortLabel = () => {
-    const field = sortField === 'name' ? 'Alphabetical' : 'Asset Count';
-    const direction = sortDir === 'asc' ? 'Ascending' : 'Descending';
-    return `${field} (${direction})`;
+  const generateFleetInsight = async () => {
+    setIsAiLoading(true);
+    setAiInsight(null);
+    try {
+      const inventorySummary = categories.map(c => `${c.name}: ${categoryStats[c.name] || 0}`).join(', ');
+      const prompt = `Executive Fleet Analysis: Review this inventory distribution by category for American Iron LLC. Data: ${inventorySummary}. Provide 3 brief, high-level strategic insights.`;
+      const result = await getStrategicAnalysis(prompt);
+      setAiInsight(result);
+    } catch (e) {
+      setAiInsight("Analysis temporarily unavailable.");
+    } finally {
+      setIsAiLoading(false);
+    }
   };
 
   return (
-    <div className="bg-white min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <div className="bg-white min-h-screen font-sans text-[#333333]">
+      {/* Breadcrumb Strip - Corporate Style */}
+      <div className="bg-[#f2f2f2] py-3 border-b border-[#e0e0e0]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
+            <Link to="/" className="hover:text-[#FFCC00]">Home</Link>
+            <span>/</span>
+            <Link to="/equipment" className="hover:text-[#FFCC00]">Products</Link>
+            <span>/</span>
+            <span className="text-[#111111]">Cat® Machines</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
         
-        {/* Navigation Breadcrumb */}
-        <div className="mb-14">
-          <div className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-6">
-            <Link to="/" className="hover:text-[#111111] transition-colors">Home</Link>
-            <span className="text-gray-200">/</span>
-            <span className="text-[#111111]">Equipment Classifications</span>
-          </div>
-          
-          <h1 className="text-[52px] font-bold text-[#b3b3b3] mb-4 leading-none tracking-tight uppercase">Equipment</h1>
-          <p className="text-[#b3b3b3] text-[18px] font-medium mb-10 max-w-2xl leading-relaxed">
-            Browse our comprehensive inventory of production-class machinery. American Iron LLC maintains a globally distributed fleet of high-performance industrial assets.
+        {/* Page Header */}
+        <div className="mb-16 border-b-2 border-gray-100 pb-10">
+          <h1 className="text-4xl md:text-6xl font-black text-[#111111] uppercase tracking-tighter mb-6 leading-none">
+            CAT® MACHINES
+          </h1>
+          <p className="text-gray-500 font-bold text-lg max-w-4xl leading-relaxed uppercase tracking-tight">
+            Select a machine category to view available high-fidelity models, technical specifications, and current industrial inventory.
           </p>
-          
-          <Link 
-            to="/equipment-list" 
-            className="inline-flex items-center bg-[#111111] text-white px-8 py-4 text-[12px] font-black uppercase tracking-[0.2em] hover:bg-[#FFCC00] hover:text-[#111111] transition-all shadow-lg"
-          >
-            <i className="fas fa-th-list mr-3"></i>
-            Access Full Inventory Matrix
-          </Link>
         </div>
 
-        {/* Section Metadata Header & Sorting Controls */}
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b-2 border-gray-100 pb-8 gap-6">
-          <div className="flex-grow">
-            <h2 className="text-[28px] font-black text-[#111111] uppercase tracking-tighter leading-none">Category Index</h2>
-            <div className="flex items-center mt-4">
-              <div className="h-1 w-24 bg-[#FFCC00]"></div>
-              <div className="ml-4 text-[9px] font-black uppercase text-gray-400 tracking-widest bg-gray-50 px-3 py-1 border border-gray-100 rounded-full">
-                Sorting by: <span className="text-[#111111]">{getSortLabel()}</span>
-              </div>
-            </div>
+        {/* Action Bar */}
+        <div className="flex flex-col md:flex-row justify-between items-center bg-gray-50 border border-gray-200 p-6 mb-16 gap-6 rounded-sm">
+          <div className="flex items-center">
+             <button 
+              onClick={generateFleetInsight}
+              className="text-[11px] font-black uppercase tracking-widest bg-[#111111] text-white hover:bg-[#FFCC00] hover:text-[#111111] flex items-center transition-all px-8 py-3.5 shadow-md"
+              disabled={isAiLoading}
+            >
+              {isAiLoading ? <i className="fas fa-sync fa-spin mr-2"></i> : <i className="fas fa-bolt mr-2"></i>}
+              {isAiLoading ? 'ANALYZING FLEET...' : 'FLEET INTELLIGENCE'}
+            </button>
           </div>
 
-          <div className="flex items-end gap-6 w-full md:w-auto">
-            {/* Enhanced Sorting Controls */}
-            <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Inventory Arrangement</span>
-              <div className="flex bg-gray-50 p-1 rounded-sm border border-gray-100">
-                <button 
-                  onClick={() => toggleSort('name')}
-                  aria-label={`Sort by Name ${sortDir === 'asc' ? 'descending' : 'ascending'}`}
-                  className={`px-5 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all flex items-center rounded-sm ${sortField === 'name' ? 'bg-white shadow-md text-[#111111]' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                  <i className="fas fa-arrow-down-a-z mr-2 opacity-40"></i>
-                  Name
-                  {sortField === 'name' && (
-                    <i className={`fas fa-chevron-${sortDir === 'asc' ? 'up' : 'down'} ml-3 text-[#FFCC00]`}></i>
-                  )}
-                </button>
-                <button 
-                  onClick={() => toggleSort('count')}
-                  aria-label={`Sort by Count ${sortDir === 'asc' ? 'descending' : 'ascending'}`}
-                  className={`px-5 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all flex items-center rounded-sm ${sortField === 'count' ? 'bg-white shadow-md text-[#111111]' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                  <i className="fas fa-database mr-2 opacity-40"></i>
-                  Depth
-                  {sortField === 'count' && (
-                    <i className={`fas fa-chevron-${sortDir === 'asc' ? 'up' : 'down'} ml-3 text-[#FFCC00]`}></i>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className="text-right hidden sm:block border-l border-gray-100 pl-6">
-              <span className="text-[32px] font-black text-[#111111] leading-none tracking-tighter">{categories.length}</span>
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mt-1">Global Sectors</span>
-            </div>
+          <div className="flex items-center space-x-8 text-[11px] font-black uppercase tracking-widest text-gray-500">
+            <span className="text-gray-300">SORT BY:</span>
+            <button onClick={() => toggleSort('name')} className={`hover:text-[#111111] flex items-center transition-colors ${sortField === 'name' ? 'text-[#111111]' : ''}`}>
+              MACHINE GROUP <i className={`fas ${sortDir === 'asc' ? 'fa-caret-up' : 'fa-caret-down'} ml-2`}></i>
+            </button>
           </div>
         </div>
 
-        {/* Equipment Category Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
-          {sortedCategories.map((cat, idx) => {
-            const assetCount = categoryStats[cat.name] || 0;
-            
+        {/* AI Result */}
+        {aiInsight && (
+          <div className="mb-16 bg-[#111111] p-10 border-l-[12px] border-[#FFCC00] shadow-2xl animate-fade-in relative">
+             <div className="flex justify-between items-start mb-6">
+                <h3 className="font-black text-xs uppercase tracking-[0.3em] text-[#FFCC00]">STRATEGIC FLEET ANALYSIS</h3>
+                <button onClick={() => setAiInsight(null)} className="text-gray-500 hover:text-white transition-colors"><i className="fas fa-times text-xl"></i></button>
+             </div>
+             <p className="text-lg text-gray-100 font-bold leading-relaxed whitespace-pre-wrap">{aiInsight}</p>
+          </div>
+        )}
+
+        {/* Product Grid - Precise 4-Column Corporate Layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {sortedCategories.map((cat) => {
             return (
               <Link 
                 to={`/equipment-list?category=${encodeURIComponent(cat.name)}`} 
                 key={cat.name} 
-                className="group flex flex-col bg-white border border-gray-200 rounded-sm hover:border-[#FFCC00] hover:shadow-[0_25px_60px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out overflow-hidden"
+                className="group flex flex-col h-full bg-white border border-gray-200 hover:border-[#111111] transition-all duration-300 p-0 shadow-sm hover:shadow-2xl"
               >
-                {/* 4:3 Aspect Ratio Image Container */}
-                <div className="w-full relative aspect-[4/3] bg-gray-50 flex items-center justify-center p-8 overflow-hidden">
-                  {/* Subtle Background Markings */}
-                  <div className="absolute top-2 left-2 text-[8px] font-black text-gray-200 select-none">AI-INDEX-{idx + 100}</div>
-                  
-                  {/* Asset Count Indicator */}
-                  <div className="absolute top-4 right-4 z-10 bg-[#111111] text-[#FFCC00] px-3 py-1 text-[9px] font-black uppercase tracking-widest shadow-xl border-b-2 border-[#FFCC00]">
-                    {assetCount} Units
-                  </div>
-
-                  <LazyCategoryImage 
-                    src={cat.img} 
-                    alt={cat.name} 
-                    className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-700 ease-in-out" 
-                  />
-                  
-                  {/* Hover Overlay Shade */}
-                  <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-[0.03] transition-opacity"></div>
+                {/* Image Area - Clean with industrial focus */}
+                <div className="w-full aspect-[4/3] bg-white flex items-center justify-center p-8 relative overflow-hidden">
+                   <div className="absolute inset-0 bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                   <LazyCategoryImage 
+                      src={cat.img} 
+                      alt={cat.name} 
+                      className="max-h-full max-w-full object-contain group-hover:scale-110 transition-transform duration-500 z-10"
+                   />
                 </div>
-                
-                {/* Information Block */}
-                <div className="p-8 flex-grow flex flex-col bg-white">
-                  <div className="flex items-start justify-between mb-4">
-                    <h3 className="font-black uppercase text-[#111111] text-[17px] tracking-tighter leading-tight group-hover:text-[#FFCC00] transition-colors">
-                      {cat.name}
-                    </h3>
-                    {cat.icon && (
-                      <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100 group-hover:bg-[#FFCC00] transition-colors group-hover:border-[#FFCC00]">
-                        <i className={`fas ${cat.icon} text-gray-300 group-hover:text-[#111111] transition-colors text-xs`}></i>
-                      </div>
-                    )}
-                  </div>
+
+                {/* Info Area */}
+                <div className="p-8 border-t border-gray-100 flex-grow flex flex-col bg-white">
+                  {cat.icon && (
+                    <i className={`fas ${cat.icon} text-2xl text-[#FFCC00] mb-4`}></i>
+                  )}
+                  <h3 className="text-xl font-black text-[#111111] uppercase tracking-tighter mb-4 group-hover:text-[#FFCC00] transition-colors leading-none">
+                    {cat.name}
+                  </h3>
                   
-                  <div className="h-[72px]"> {/* Fixed height for text consistency across rows */}
-                    <p className="text-[12px] text-gray-500 font-semibold leading-relaxed line-clamp-3">
-                      {cat.description || 'Enterprise-grade machinery solutions designed for high-availability performance in professional industrial environments.'}
-                    </p>
-                  </div>
-                  
-                  <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-between">
-                    <div className="flex items-center text-[10px] font-black uppercase tracking-[0.2em] text-[#111111]">
-                      <span>Explore Assets</span>
-                      <i className="fas fa-arrow-right-long ml-3 group-hover:translate-x-2 transition-transform duration-300 text-[#FFCC00]"></i>
-                    </div>
-                    <div className="text-[14px] font-black text-gray-100 group-hover:text-gray-200 transition-colors select-none font-mono">
-                      #{cat.name.slice(0, 3)}
-                    </div>
+                  <p className="text-[12px] text-gray-500 font-bold leading-relaxed mb-8 flex-grow uppercase tracking-tight">
+                    {cat.description}
+                  </p>
+
+                  <div className="mt-auto border-t-2 border-gray-50 pt-6">
+                    <span className="text-[11px] font-black uppercase tracking-widest text-[#111111] inline-flex items-center group-hover:text-[#FFCC00] transition-all">
+                      VIEW MODELS <i className="fas fa-chevron-right ml-3 text-[10px]"></i>
+                    </span>
                   </div>
                 </div>
               </Link>
@@ -231,22 +195,33 @@ const Equipment: React.FC = () => {
           })}
         </div>
 
-        {/* Support Call-to-Action */}
-        <div className="mt-32 bg-[#111111] rounded-sm p-16 flex flex-col items-center text-center relative overflow-hidden group border-b-8 border-[#FFCC00]">
-            {/* Visual Industrial Flourish */}
-            <div className="absolute top-0 left-0 w-2 h-full bg-[#FFCC00]"></div>
-            
-            <div className="max-w-2xl relative z-10">
-                <i className="fas fa-magnifying-glass-location text-4xl text-[#FFCC00] mb-8"></i>
-                <h3 className="text-[36px] font-bold text-white uppercase mb-6 tracking-tight">Custom Procurement Request</h3>
-                <p className="text-gray-400 font-medium uppercase tracking-tight text-[14px] leading-relaxed mb-10">
-                    Cannot find the specific asset required for your project? Our enterprise sourcing team can perform targeted inspections and logistics for off-market machinery.
-                </p>
-                <Link to="/quote" className="inline-flex items-center bg-[#FFCC00] text-[#111111] px-12 py-5 font-black uppercase tracking-[0.2em] text-[11px] hover:bg-white transition-all shadow-2xl">
-                  Contact Sourcing Division
-                </Link>
+        {/* Industrial Support Section */}
+        <div className="mt-32 bg-[#f9f9f9] border-t-8 border-[#111111] p-16 grid grid-cols-1 lg:grid-cols-3 gap-16">
+          <div className="lg:col-span-2">
+            <h3 className="text-4xl font-black uppercase text-[#111111] mb-6 tracking-tighter">UNMATCHED FLEET SUPPORT</h3>
+            <p className="text-gray-600 font-bold text-lg mb-10 leading-relaxed uppercase tracking-tight">
+              At American Iron, we don't just sell machines. We architect lifecycle solutions. Our procurement networks and logistics command center ensure your project remains on schedule, anywhere on the planet.
+            </p>
+            <div className="flex flex-wrap gap-6">
+               <Link to="/contact" className="bg-[#111111] text-white px-12 py-5 text-xs font-black uppercase tracking-widest hover:bg-[#FFCC00] hover:text-[#111111] transition-all rounded-sm shadow-lg">
+                  CONNECT WITH A SPECIALIST
+               </Link>
+               <Link to="/quote" className="border-4 border-[#111111] text-[#111111] px-12 py-5 text-xs font-black uppercase tracking-widest hover:bg-[#111111] hover:text-white transition-all rounded-sm">
+                  REQUEST QUOTE
+               </Link>
             </div>
+          </div>
+          <div className="bg-[#111111] p-12 border-t-[12px] border-[#FFCC00] shadow-2xl">
+             <h4 className="text-white text-lg font-black uppercase mb-6 tracking-widest">EXPORT COMMAND</h4>
+             <p className="text-xs text-gray-400 font-bold mb-10 uppercase tracking-widest leading-relaxed">
+                We handle AES filings, intercontinental port drayage, and heavy-haul compliance for the global distribution of all assets.
+             </p>
+             <Link to="/shipping" className="text-[11px] font-black uppercase text-[#FFCC00] border-b-2 border-[#FFCC00] pb-1.5 hover:text-white hover:border-white transition-all">
+                LEARN ABOUT LOGISTICS <i className="fas fa-arrow-right ml-2"></i>
+             </Link>
+          </div>
         </div>
+
       </div>
     </div>
   );

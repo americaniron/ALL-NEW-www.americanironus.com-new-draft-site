@@ -4,24 +4,64 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>American Iron LLC | Heavy Equipment & Parts</title>
+    <title>American Iron LLC | Authorized Heavy Equipment Dealer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+        
+        :root {
+            --cat-yellow: #FFCC00;
+            --cat-black: #111111;
+            --cat-gray-light: #f2f2f2;
+            --cat-border: #e0e0e0;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: #ffffff;
+            color: #333333;
+            -webkit-font-smoothing: antialiased;
         }
-        .yellow-accent { color: #FFCC00; }
-        .bg-yellow-accent { background-color: #FFCC00; }
-        .border-yellow-accent { border-color: #FFCC00; }
-        
+
+        /* Enterprise Sharp UI */
+        .btn-cat-primary {
+            background-color: var(--cat-yellow);
+            color: var(--cat-black);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 1rem 2.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-cat-primary:hover {
+            background-color: var(--cat-black);
+            color: white;
+        }
+
+        .industrial-card {
+            border: 1px solid var(--cat-border);
+            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .industrial-card:hover {
+            border-color: #999;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
+        }
+
         /* Custom scrollbar for industrial feel */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #111; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #FFCC00; }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--cat-gray-light); }
+        ::-webkit-scrollbar-thumb { background: #333; border: 2px solid var(--cat-gray-light); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--cat-yellow); }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
     </style>
 <script type="importmap">
 {

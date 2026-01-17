@@ -16,11 +16,13 @@ const Shipping: React.FC = () => {
   const [packages, setPackages] = useState<Package[]>([initialPackage]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [shipmentResult, setShipmentResult] = useState<any>(null);
 
   const handleGetRates = async () => {
     setLoading(true);
+    setError(null);
     setQuotes([]);
     setSelectedQuote(null);
     try {
@@ -28,7 +30,7 @@ const Shipping: React.FC = () => {
       setQuotes(results);
     } catch (err) {
       console.error(err);
-      alert('Error fetching carrier rates. Please ensure the logistics backend is online.');
+      setError('Error fetching carrier rates. Please check addresses and ensure the logistics backend is online.');
     } finally {
       setLoading(false);
     }
@@ -37,6 +39,7 @@ const Shipping: React.FC = () => {
   const handleCreateShipment = async () => {
     if (!selectedQuote) return;
     setLoading(true);
+    setError(null);
     try {
       const result = await createShipment({
         carrier: selectedQuote.carrier,
@@ -48,7 +51,7 @@ const Shipping: React.FC = () => {
       setShipmentResult(result);
     } catch (err) {
       console.error(err);
-      alert('Failed to generate shipping label. Check address format.');
+      setError('Failed to generate shipping label. Please double-check address formatting or API credentials.');
     } finally {
       setLoading(false);
     }
@@ -169,6 +172,12 @@ const Shipping: React.FC = () => {
             <div className="bg-[#111111] p-8 text-white shadow-xl border-b-8 border-[#FFCC00]">
               <h2 className="text-sm font-black uppercase tracking-[0.3em] mb-8 text-[#FFCC00]">Logistics Execution</h2>
               
+              {error && (
+                <div className="mb-6 p-4 bg-red-900/50 text-red-300 text-xs font-bold border-l-4 border-red-500">
+                  {error}
+                </div>
+              )}
+
               <button 
                 onClick={handleGetRates} 
                 disabled={loading || !shipper.postalCode || !recipient.postalCode}

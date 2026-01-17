@@ -34,10 +34,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [categories, setCategories] = useState<any[]>(EQUIPMENT_CATEGORIES);
   const [parts, setParts] = useState<PartListing[]>(ENTERPRISE_PARTS_CATALOG);
   const [copy, setCopy] = useState<SiteCopy>({
-    homeHeroTitle: "Global Equipment Solutions. Built for Your Fleet.",
-    homeHeroSubtitle: "Enterprise-level sourcing, precision dismantling, and seamless logistics for the heavy construction industry worldwide.",
-    aboutMission: "American Iron LLC was established to bring a higher standard of professionalism to the heavy equipment market.",
-    aboutHistory: "We are not just a yard; we are a logistics and procurement engine."
+    homeHeroTitle: "COMMAND YOUR HORIZON.",
+    homeHeroSubtitle: "Architecting the world's most resilient industrial supply chains. We deliver mission-critical heavy assets with unprecedented velocity and logistical precision.",
+    aboutMission: "To architect the most reliable heavy equipment supply chain in the Western Hemisphere.",
+    aboutHistory: "Transforming surplus industrial capital into operational leverage for contractors worldwide."
   });
 
   useEffect(() => {

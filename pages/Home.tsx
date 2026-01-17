@@ -1,27 +1,52 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { getFastRecommendation, getStrategicAnalysis } from '../services/geminiService';
+import { getFastRecommendation, getStrategicAnalysis, searchIndustryTrends, findLocalService } from '../services/geminiService';
 import { useData } from '../DataContext';
+
+type AiMode = 'fast' | 'think' | 'search' | 'local';
 
 const Home: React.FC = () => {
   const { copy } = useData();
   const [showAiModal, setShowAiModal] = React.useState(false);
   const [aiPrompt, setAiPrompt] = React.useState('');
   const [aiResult, setAiResult] = React.useState('');
+  const [searchSources, setSearchSources] = React.useState<any[]>([]);
   const [isAiLoading, setIsAiLoading] = React.useState(false);
-  const [mode, setMode] = React.useState<'fast' | 'think'>('fast');
+  const [mode, setMode] = React.useState<AiMode>('fast');
 
   const handleAiInquiry = async () => {
     if (!aiPrompt) return;
     setIsAiLoading(true);
     setAiResult('');
+    setSearchSources([]);
     
     try {
       if (mode === 'think') {
         const result = await getStrategicAnalysis(aiPrompt);
         setAiResult(result);
-      } else {
+      } else if (mode === 'search') {
+        const { text, sources } = await searchIndustryTrends(aiPrompt);
+        setAiResult(text);
+        setSearchSources(sources);
+      } else if (mode === 'local') {
+        let lat, lng;
+        let locationWarning = "";
+        try {
+          const pos = await new Promise<GeolocationPosition>((res, rej) => 
+            navigator.geolocation.getCurrentPosition(res, rej, { timeout: 5000 })
+          );
+          lat = pos.coords.latitude;
+          lng = pos.coords.longitude;
+        } catch (e) {
+          console.warn("Location permission denied or timed out for AI concierge.");
+          locationWarning = "Could not get your location. For best results, enable location services. Searching without it.\n\n";
+        }
+        const { text, sources } = await findLocalService(aiPrompt, lat, lng);
+        setAiResult(locationWarning + text);
+        setSearchSources(sources);
+      }
+      else {
         const result = await getFastRecommendation(aiPrompt);
         setAiResult(result);
       }
@@ -31,147 +56,230 @@ const Home: React.FC = () => {
       setIsAiLoading(false);
     }
   };
+  
+  const placeholders: Record<AiMode, string> = {
+    fast: "Ask for a quick recommendation, e.g., 'Best dozer for soft soil?'",
+    think: "Describe a complex fleet or maintenance challenge...",
+    search: "Search current heavy equipment market trends...",
+    local: "Find nearby services, e.g., 'CAT dealers near me' or 'Hydraulic repair in Houston'"
+  };
+
 
   return (
-    <div className="space-y-16">
-      {/* Hero Section */}
+    <div className="bg-white">
+      {/* Hero Section - Enterprise Industrial Aesthetic */}
       <section 
-        className="relative h-[650px] bg-cover bg-center flex items-center overflow-hidden" 
-        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1541888941295-184a621d4693?q=80&w=1600&auto=format&fit=crop')" }}
+        className="relative h-[750px] flex items-center overflow-hidden"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-[#111111] via-[#111111cc] to-transparent"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-white">
-          <div className="max-w-3xl">
-            <h1 className="text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.9]">
-              {copy.homeHeroTitle.split('.')[0]}.<br/>
-              <span className="text-[#FFCC00]">{copy.homeHeroTitle.split('.')[1] || ''}</span>
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline
+          className="absolute z-0 w-full h-full object-cover"
+          poster="/assets/banner_main.jpg"
+        >
+            <source src="/assets/construction_loop.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#111111] via-[#111111]/70 to-transparent z-10"></div>
+        <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 w-full z-20">
+          <div className="max-w-4xl">
+            <div className="inline-flex items-center bg-[#FFCC00] text-[#111111] px-5 py-1.5 font-black uppercase text-[11px] tracking-[0.3em] mb-10 shadow-lg">
+              GLOBAL FLEET DOMINANCE
+            </div>
+            <h1 className="text-8xl md:text-9xl font-black uppercase tracking-tighter text-white leading-[0.85] mb-10 drop-shadow-2xl">
+              COMMAND<br/>
+              <span className="text-[#FFCC00]">YOUR HORIZON.</span>
             </h1>
-            <p className="mt-8 text-xl max-w-2xl font-light text-gray-300 leading-relaxed">
-              {copy.homeHeroSubtitle}
+            <p className="text-2xl text-gray-100 font-bold leading-relaxed max-w-2xl mb-12 drop-shadow-md">
+              Architecting the world's most resilient industrial supply chains. We deliver mission-critical heavy assets with unprecedented velocity and logistical precision.
             </p>
-            <div className="mt-12 flex flex-wrap gap-4">
-              <Link to="/equipment-list" className="bg-[#FFCC00] text-[#111111] px-10 py-4 font-black uppercase tracking-widest hover:bg-white transition-colors shadow-2xl">
-                Inventory
+            <div className="flex flex-wrap gap-6">
+              <Link to="/equipment" className="bg-[#FFCC00] text-[#111111] px-14 py-5 font-black uppercase tracking-widest hover:bg-white transition-all shadow-xl text-sm border-2 border-[#FFCC00]">
+                ACCESS GLOBAL FLEET
               </Link>
               <button 
                   onClick={() => setShowAiModal(true)}
-                  className="bg-white text-[#111111] px-10 py-4 font-black uppercase tracking-widest hover:bg-[#FFCC00] transition-all flex items-center"
+                  className="bg-transparent border-2 border-white text-white px-12 py-5 font-black uppercase tracking-widest hover:bg-white hover:text-[#111111] transition-all flex items-center text-sm"
               >
-                <i className="fas fa-robot mr-3"></i> AI Concierge
+                <i className="fas fa-microchip mr-3 text-[#FFCC00]"></i> AI CONCIERGE
               </button>
-              <Link to="/ai-visualizer" className="border-2 border-white text-white px-10 py-4 font-black uppercase tracking-widest hover:bg-white hover:text-[#111111] transition-all">
-                ✨ Visualizer
-              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Feature Navigation Bar */}
-      <div className="max-w-7xl mx-auto px-4 -mt-16 relative z-10 grid grid-cols-1 md:grid-cols-3 gap-1 shadow-2xl">
-        <Link to="/dealer-search" className="bg-[#111111] p-10 text-white flex justify-between items-center group border-b-4 border-[#FFCC00]">
-          <div>
-            <div className="text-[10px] font-black text-[#FFCC00] uppercase tracking-[0.3em] mb-2">Service Network</div>
-            <div className="text-xl font-extrabold uppercase group-hover:translate-x-2 transition-transform">Dealer Locator</div>
-          </div>
-          <i className="fas fa-location-dot text-2xl opacity-20 group-hover:opacity-100 transition-opacity"></i>
-        </Link>
-        <Link to="/shipping" className="bg-[#1a1a1a] p-10 text-white flex justify-between items-center group border-b-4 border-white">
-          <div>
-            <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-2">Global Forwarding</div>
-            <div className="text-xl font-extrabold uppercase group-hover:translate-x-2 transition-transform">Logistics Portal</div>
-          </div>
-          <i className="fas fa-ship text-2xl opacity-20 group-hover:opacity-100 transition-opacity"></i>
-        </Link>
-        <Link to="/parts-list" className="bg-[#222222] p-10 text-white flex justify-between items-center group border-b-4 border-gray-600">
-          <div>
-            <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-2">Technical Registry</div>
-            <div className="text-xl font-extrabold uppercase group-hover:translate-x-2 transition-transform">Parts Catalog</div>
-          </div>
-          <i className="fas fa-gears text-2xl opacity-20 group-hover:opacity-100 transition-opacity"></i>
-        </Link>
-      </div>
+      {/* Quick Access Tiles - Holt Style Drop-ins */}
+      <section className="bg-white py-0">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 -mt-16 relative z-10 shadow-2xl border-b-8 border-[#FFCC00]">
+            {/* Card 1 */}
+            <Link to="/equipment" className="bg-[#111111] p-12 group hover:bg-[#FFCC00] transition-all duration-300 flex flex-col items-center text-center border-r border-gray-800">
+              <div className="text-[#FFCC00] text-5xl mb-8 group-hover:text-[#111111] transition-colors"><i className="fas fa-truck-monster"></i></div>
+              <h3 className="text-xl font-black uppercase text-white mb-4 tracking-tight group-hover:text-[#111111]">ACQUIRE ASSETS</h3>
+              <p className="text-gray-500 font-bold text-xs mb-8 leading-relaxed uppercase group-hover:text-[#111111]/70">Access the Global Fleet</p>
+              <span className="text-[#FFCC00] font-black uppercase text-[10px] tracking-widest group-hover:text-[#111111] border-b-2 border-[#FFCC00] group-hover:border-[#111111]">EXPLORE NOW</span>
+            </Link>
+            
+            {/* Card 2 */}
+            <Link to="/parts-list" className="bg-[#222222] p-12 group hover:bg-[#FFCC00] transition-all duration-300 flex flex-col items-center text-center border-r border-gray-800">
+              <div className="text-[#FFCC00] text-5xl mb-8 group-hover:text-[#111111] transition-colors"><i className="fas fa-gears"></i></div>
+              <h3 className="text-xl font-black uppercase text-white mb-4 tracking-tight group-hover:text-[#111111]">SOURCE PARTS</h3>
+              <p className="text-gray-500 font-bold text-xs mb-8 leading-relaxed uppercase group-hover:text-[#111111]/70">Source Mission-Critical Parts</p>
+              <span className="text-[#FFCC00] font-black uppercase text-[10px] tracking-widest group-hover:text-[#111111] border-b-2 border-[#FFCC00] group-hover:border-[#111111]">FIND PARTS</span>
+            </Link>
 
-      {/* Intro Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+            {/* Card 3 */}
+            <Link to="/services" className="bg-[#111111] p-12 group hover:bg-[#FFCC00] transition-all duration-300 flex flex-col items-center text-center border-r border-gray-800">
+              <div className="text-[#FFCC00] text-5xl mb-8 group-hover:text-[#111111] transition-colors"><i className="fas fa-screwdriver-wrench"></i></div>
+              <h3 className="text-xl font-black uppercase text-white mb-4 tracking-tight group-hover:text-[#111111]">MAINTAIN FLEET</h3>
+              <p className="text-gray-500 font-bold text-xs mb-8 leading-relaxed uppercase group-hover:text-[#111111]/70">Maximize Fleet Uptime</p>
+              <span className="text-[#FFCC00] font-black uppercase text-[10px] tracking-widest group-hover:text-[#111111] border-b-2 border-[#FFCC00] group-hover:border-[#111111]">VIEW SERVICES</span>
+            </Link>
+
+            {/* Card 4 */}
+            <Link to="/shipping" className="bg-[#222222] p-12 group hover:bg-[#FFCC00] transition-all duration-300 flex flex-col items-center text-center">
+              <div className="text-[#FFCC00] text-5xl mb-8 group-hover:text-[#111111] transition-colors"><i className="fas fa-globe-americas"></i></div>
+              <h3 className="text-xl font-black uppercase text-white mb-4 tracking-tight group-hover:text-[#111111]">DEPLOY ASSETS</h3>
+              <p className="text-gray-500 font-bold text-xs mb-8 leading-relaxed uppercase group-hover:text-[#111111]/70">Command Global Logistics</p>
+              <span className="text-[#FFCC00] font-black uppercase text-[10px] tracking-widest group-hover:text-[#111111] border-b-2 border-[#FFCC00] group-hover:border-[#111111]">CALCULATE</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Corporate Value Prop */}
+      <section className="py-32 bg-white">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
             <div>
-                <h2 className="text-[40px] font-black uppercase mb-8 border-l-8 border-[#FFCC00] pl-6 text-[#111111] leading-none">The Iron Strategy</h2>
-                <p className="text-gray-600 leading-relaxed text-lg mb-8 font-medium">
-                    American Iron LLC is the strategic partner for fleet managers and contractors who demand reliability. In an industry where downtime destroys margins, we provide a robust supply chain solution for heavy equipment and critical components.
-                </p>
-                <div className="grid grid-cols-2 gap-8">
-                  <div>
-                    <div className="text-4xl font-black text-[#111111] mb-2">45+</div>
-                    <div className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Countries Exported</div>
-                  </div>
-                  <div>
-                    <div className="text-4xl font-black text-[#111111] mb-2">24/7</div>
-                    <div className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Procurement Support</div>
-                  </div>
+              <div className="text-[#FFCC00] font-black text-xs tracking-[0.4em] uppercase mb-4">ESTABLISHED 2015</div>
+              <h2 className="text-5xl md:text-6xl font-black uppercase text-[#111111] mb-10 leading-none tracking-tighter">
+                RELIABILITY IS OUR<br/><span className="text-[#FFCC00]">CORE CURRENCY.</span>
+              </h2>
+              <p className="text-xl text-gray-600 font-medium leading-relaxed mb-12">
+                American Iron is the strategic fulcrum for global industry leaders. We convert surplus capital assets into operational velocity, circumventing OEM production queues to deliver mission-critical equipment on your timeline.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-10">
+                <div className="border-l-4 border-[#FFCC00] pl-6">
+                    <div className="text-4xl font-black text-[#111111] mb-1">13</div>
+                    <div className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Nations Exported</div>
                 </div>
+                <div className="border-l-4 border-[#FFCC00] pl-6">
+                    <div className="text-4xl font-black text-[#111111] mb-1">24/7</div>
+                    <div className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Global Support</div>
+                </div>
+              </div>
+
+              <div className="mt-16">
+                <Link to="/about" className="inline-block bg-[#111111] text-white px-12 py-5 font-black uppercase text-xs tracking-widest hover:bg-[#FFCC00] hover:text-[#111111] transition-all">
+                  COMPANY PROFILE
+                </Link>
+              </div>
             </div>
-            <div className="relative group">
-              <div className="absolute -inset-4 bg-[#FFCC00] opacity-10 group-hover:opacity-20 transition-opacity"></div>
-              <img src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=800" className="relative shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-700" alt="Industrial" />
+            
+            <div className="relative">
+              <div className="absolute -top-6 -left-6 w-full h-full bg-[#FFCC00] -z-10"></div>
+              <img src="/assets/site_fleet.jpg" className="w-full shadow-2xl border-8 border-white" alt="Industrial Operations" />
+              <div className="absolute -bottom-10 -right-10 bg-[#111111] p-10 text-white shadow-2xl hidden xl:block border-t-8 border-[#FFCC00]">
+                  <div className="text-3xl font-black mb-2 uppercase">Verified</div>
+                  <div className="text-xs font-bold text-[#FFCC00] uppercase tracking-widest">Tier-1 Fleet Assets</div>
+              </div>
             </div>
+          </div>
         </div>
       </section>
 
-      {/* AI Modal */}
+      {/* AI Modal - Refined for Enterprise Branding */}
       {showAiModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#111111] bg-opacity-90 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-2xl p-0 rounded-sm border-t-8 border-[#FFCC00] relative overflow-hidden shadow-2xl">
-            <button onClick={() => setShowAiModal(false)} className="absolute top-4 right-4 z-10 text-gray-400 hover:text-[#111111] transition-colors">
-                <i className="fas fa-times text-2xl"></i>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#111111]/95 backdrop-blur-md">
+          <div className="bg-white w-full max-w-3xl p-0 rounded-sm border-t-[12px] border-[#FFCC00] relative overflow-hidden shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
+            <button onClick={() => setShowAiModal(false)} className="absolute top-6 right-6 z-10 text-gray-400 hover:text-[#111111] transition-colors">
+                <i className="fas fa-times text-3xl"></i>
             </button>
             
-            <div className="bg-gray-50 p-8 border-b border-gray-100">
-              <h3 className="text-3xl font-black uppercase tracking-tight text-[#111111]">✨ Intelligence Hub</h3>
-              <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-[0.3em] font-black">AI-Powered Fleet Consulting</p>
+            <div className="bg-[#111111] p-10 border-b border-gray-800">
+              <h3 className="text-4xl font-black uppercase tracking-tight text-[#FFCC00]">INTELLIGENCE HUB</h3>
+              <p className="text-[11px] text-gray-500 mt-2 uppercase tracking-[0.4em] font-black">AI-POWERED FLEET STRATEGY</p>
             </div>
 
-            <div className="p-8">
-              <div className="flex bg-gray-100 p-1 mb-6 rounded-sm">
+            <div className="p-10">
+              <div className="grid grid-cols-2 lg:grid-cols-4 bg-gray-100 p-1.5 mb-10 rounded-sm">
                 <button 
                   onClick={() => setMode('fast')}
-                  className={`flex-grow py-3 text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'fast' ? 'bg-[#111111] text-white shadow-lg' : 'text-gray-400 hover:text-gray-600'}`}
+                  className={`flex-grow py-4 text-xs font-black uppercase tracking-widest transition-all ${mode === 'fast' ? 'bg-[#111111] text-white shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}
                 >
-                  <i className="fas fa-bolt mr-2"></i> Fast Analysis
+                  Fast
                 </button>
                 <button 
                   onClick={() => setMode('think')}
-                  className={`flex-grow py-3 text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'think' ? 'bg-[#111111] text-white shadow-lg' : 'text-gray-400 hover:text-gray-600'}`}
+                  className={`flex-grow py-4 text-xs font-black uppercase tracking-widest transition-all ${mode === 'think' ? 'bg-[#111111] text-white shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}
                 >
-                  <i className="fas fa-brain mr-2"></i> Strategic Deep Think
+                  Deep
+                </button>
+                <button 
+                  onClick={() => setMode('search')}
+                  className={`flex-grow py-4 text-xs font-black uppercase tracking-widest transition-all ${mode === 'search' ? 'bg-[#111111] text-white shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  Market
+                </button>
+                 <button 
+                  onClick={() => setMode('local')}
+                  className={`flex-grow py-4 text-xs font-black uppercase tracking-widest transition-all ${mode === 'local' ? 'bg-[#111111] text-white shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  Local
                 </button>
               </div>
 
               <textarea 
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  rows={4} 
-                  className="w-full border-2 border-gray-100 focus:border-[#FFCC00] focus:ring-0 p-6 text-gray-800 font-bold text-lg mb-6 outline-none transition-colors"
-                  placeholder={mode === 'fast' ? "Quick question about specs or parts..." : "Describe a complex strategic challenge or multi-unit maintenance roadmap..."}
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder={placeholders[mode]}
+                className="w-full border-4 border-gray-100 p-6 font-bold text-lg h-44 focus:border-[#FFCC00] outline-none mb-10 transition-colors bg-gray-50"
               />
-              
+
               <button 
-                  onClick={handleAiInquiry}
-                  disabled={isAiLoading}
-                  className="w-full bg-[#FFCC00] text-[#111111] py-5 font-black uppercase tracking-[0.2em] text-xs hover:bg-[#111111] hover:text-white transition-all disabled:opacity-50 shadow-xl"
+                onClick={handleAiInquiry}
+                disabled={!aiPrompt || isAiLoading}
+                className="w-full bg-[#111111] text-white py-6 font-black uppercase tracking-[0.3em] text-sm hover:bg-[#FFCC00] hover:text-[#111111] transition-all disabled:opacity-50 shadow-xl"
               >
-                {isAiLoading ? 'Synthesizing Response...' : mode === 'fast' ? 'Execute Fast Query' : 'Begin Deep Strategic Analysis'}
+                {isAiLoading ? <i className="fas fa-cog fa-spin mr-3"></i> : <i className="fas fa-shield-halved mr-3"></i>}
+                {isAiLoading ? 'EXECUTING ANALYSIS...' : 'INITIALIZE SYSTEM'}
               </button>
 
               {aiResult && (
-                  <div className={`mt-10 p-8 border-l-8 border-[#FFCC00] text-sm leading-relaxed text-gray-700 animate-fade-in ${mode === 'think' ? 'bg-[#111111] text-white' : 'bg-gray-50'}`}>
-                    <div className="text-[9px] font-black uppercase tracking-[0.4em] mb-4 text-[#FFCC00]">
-                      {mode === 'think' ? 'Deep Strategic Analysis Result' : 'Operational Insight'}
-                    </div>
-                    <div className="whitespace-pre-wrap font-medium">
-                      {aiResult}
-                    </div>
+                <div className="mt-12 bg-gray-50 p-10 border-l-[10px] border-[#FFCC00] animate-fade-in">
+                  <h4 className="text-xs font-black uppercase text-gray-400 mb-6 tracking-[0.2em]">INTELLIGENCE REPORT</h4>
+                  <div className="prose prose-lg max-w-none text-[#111111] font-bold leading-relaxed whitespace-pre-wrap">
+                    {aiResult}
                   </div>
+                  
+                  {searchSources.length > 0 && (
+                    <div className="mt-10 pt-10 border-t border-gray-200">
+                      <h5 className="text-[11px] font-black uppercase text-gray-400 mb-6 tracking-widest">VERIFIED SOURCES</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {searchSources.map((source, idx) => {
+                           const link = source.web?.uri || source.maps?.uri;
+                           const title = source.web?.title || source.maps?.title;
+                           const icon = source.web ? 'fa-link' : 'fa-map-location-dot';
+                           
+                           if (!link || !title) return null;
+
+                           return (
+                            <a key={idx} href={link} target="_blank" rel="noreferrer" className="block bg-white p-4 border border-gray-200 hover:border-[#FFCC00] transition-all group shadow-sm">
+                              <div className="text-[#111111] group-hover:text-[#FFCC00] text-xs font-black flex items-center uppercase tracking-tight">
+                                <i className={`fas ${icon} mr-2 text-[10px]`}></i>
+                                {title}
+                              </div>
+                            </a>
+                           )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -182,3 +290,4 @@ const Home: React.FC = () => {
 };
 
 export default Home;
+        
