@@ -20,6 +20,7 @@ interface DataContextType {
   updateEquipment: (id: string, item: Partial<DetailedEquipmentListing>) => void;
   deleteEquipment: (id: string) => void;
   addCategory: (cat: any) => void;
+  updateCategory: (name: string, updates: any) => void;
   deleteCategory: (name: string) => void;
   updateCopy: (newCopy: Partial<SiteCopy>) => void;
   updatePart: (part_number: string, item: Partial<PartListing>) => void;
@@ -61,6 +62,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deleteEquipment = (id: string) => setEquipment(prev => prev.filter(item => item.id !== id));
 
   const addCategory = (cat: any) => setCategories(prev => [...prev, cat]);
+  const updateCategory = (name: string, updates: any) =>
+    setCategories(prev => prev.map(c => c.name === name ? { ...c, ...updates } : c));
   const deleteCategory = (name: string) => setCategories(prev => prev.filter(c => c.name !== name));
 
   const addPart = (item: PartListing) => setParts(prev => [item, ...prev]);
@@ -74,7 +77,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <DataContext.Provider value={{ 
       equipment, categories, parts, copy, 
       addEquipment, updateEquipment, deleteEquipment,
-      addCategory, deleteCategory,
+      addCategory, updateCategory, deleteCategory,
       addPart, updatePart, deletePart,
       updateCopy 
     }}>

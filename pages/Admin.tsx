@@ -4,95 +4,111 @@ import { Link } from 'react-router-dom';
 import { useData } from '../DataContext';
 import { DetailedEquipmentListing } from '../constants';
 import { generateEquipmentVisual } from '../services/geminiService';
+import { PartListing } from '../types';
 
+/**
+ * Admin component for managing equipment, parts, categories, and site copy.
+ */
 const Admin: React.FC = () => {
   const { 
     equipment, categories, parts, copy, 
-    addEquipment, deleteEquipment,
-    deletePart, updateCopy 
+    addEquipment, updateEquipment, deleteEquipment,
+    addPart, updatePart, deletePart,
+    updateCategory, updateCopy 
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<'equipment' | 'parts' | 'copy'>('equipment');
+  const [activeTab, setActiveTab] = useState<'equipment' | 'parts' | 'categories' | 'copy'>('equipment');
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Equipment Form State
+  // Form States for adding new items
   const [newEq, setNewEq] = useState<Partial<DetailedEquipmentListing>>({
     id: '', make: 'CAT', model: '', year: new Date().getFullYear(), price: '', city: '', state: '', category: 'EXCAVATORS', meter: '0 Hours', img: ''
   });
   const [eqImagePrompt, setEqImagePrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generationError, setGenerationError] = useState<string | null>(null);
+  
+  const [newPart, setNewPart] = useState<Partial<PartListing>>({
+    part_number: '', description: '', category: 'ENGINE COMPONENTS', image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=200', attributes: {}
+  });
 
-  // Login check
+  // Handle administrator authentication
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'admin123') setIsAuthenticated(true);
-    else alert('Invalid Access Code');
+    if (password === '019700') {
+      setIsAuthenticated(true);
+    } else {
+      alert('Invalid Access Code');
+    }
   };
 
+  // Helper to update image URLs for various data types
+  const handleUpdateImage = (type: 'eq' | 'part' | 'cat', id: string, currentImg: string) => {
+    const newUrl = window.prompt("Enter new Image URL:", currentImg);
+    if (newUrl === null) return;
+    
+    if (type === 'eq') updateEquipment(id, { img: newUrl });
+    else if (type === 'part') updatePart(id, { image: newUrl });
+    else if (type === 'cat') updateCategory(id, { img: newUrl });
+  };
+
+  // Handle adding new equipment to the global inventory
   const handleAddEquipment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEq.id || !newEq.make || !newEq.model) {
-      alert('Please provide at least a Stock ID, Make, and Model.');
+      alert('Please provide ID, Make, and Model.');
       return;
     }
     addEquipment({
       ...newEq,
       img: newEq.img || 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=800',
       title: `${newEq.year} ${newEq.make} ${newEq.model}`,
-      description: 'Factory certified unit ready for deployment. Full service history available. Subject to prior sale.',
-      specs: [
-        { label: 'Stock #', value: newEq.id },
-        { label: 'Year', value: String(newEq.year) },
-        { label: 'Hours', value: newEq.meter || '0' }
-      ],
-      features: ['Verified Service History', 'Export Ready', 'Fleet Maintained', 'Financing Available']
+      description: 'Asset verified and ready for deployment.',
+      specs: [{ label: 'Stock #', value: newEq.id || '' }, { label: 'Year', value: String(newEq.year) }, { label: 'Hours', value: newEq.meter || '0' }],
+      features: ['Verified History', 'Fleet Maintained']
     } as DetailedEquipmentListing);
     setNewEq({ id: '', make: 'CAT', model: '', year: new Date().getFullYear(), price: '', city: '', state: '', category: 'EXCAVATORS', meter: '0 Hours', img: '' });
-    setEqImagePrompt('');
-    alert('Asset added to fleet.');
+    alert('Asset added.');
   };
 
+  // Use AI to generate a professional industrial image for new equipment
   const generateImage = async () => {
-    const defaultPrompt = `${newEq.year || ''} ${newEq.make || ''} ${newEq.model || ''}, clean, on a plain white studio background, high-resolution industrial photograph.`;
-    const finalPrompt = eqImagePrompt.trim() || defaultPrompt;
-
-    if (!newEq.make || !newEq.model) {
-      alert("Please provide at least a Make and Model before generating an image.");
-      return;
-    }
-    
+    if (!newEq.model) return alert("Enter model for AI Gen");
     setIsGenerating(true);
-    setGenerationError(null);
     try {
-      const { imageUrl } = await generateEquipmentVisual(finalPrompt, '4:3', '1K');
+      // Prompt user to select API key if not already done (Required for Gemini 3 Pro Image)
+      const hasKey = await (window as any).aistudio?.hasSelectedApiKey?.();
+      if (!hasKey) {
+        await (window as any).aistudio?.openSelectKey?.();
+      }
+
+      const { imageUrl } = await generateEquipmentVisual(eqImagePrompt || `${newEq.year} ${newEq.make} ${newEq.model} industrial photo`, '4:3');
       setNewEq({ ...newEq, img: imageUrl });
-    } catch (e: any) {
-      console.error(e);
-      setGenerationError(`AI Generation Failed: ${e.message}. High-quality image models often require a paid API key.`);
+    } catch (e) {
+      console.error("Image Gen Error:", e);
+      alert('AI Generation Failed. Ensure a valid paid API key is selected.');
     } finally {
       setIsGenerating(false);
     }
   };
 
+  // Rendering logic for unauthorized access
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#111111] flex items-center justify-center p-4">
         <div className="bg-white p-8 max-w-md w-full border-t-8 border-[#FFCC00]">
-          <h1 className="text-2xl font-black uppercase mb-6 text-center">Secure Admin Portal</h1>
+          <h1 className="text-2xl font-black uppercase mb-6 text-center tracking-tighter">Secure Admin Access</h1>
           <form onSubmit={handleLogin} className="space-y-4">
             <input 
               type="password" 
-              placeholder="Enter Access Code" 
+              placeholder="Authorization Code" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full border-2 border-gray-200 p-4 font-bold focus:border-[#FFCC00] outline-none"
             />
-            <button className="w-full bg-[#111111] text-white py-4 font-black uppercase tracking-widest hover:bg-[#FFCC00] hover:text-[#111111] transition-all">
+            <button className="w-full bg-[#111111] text-white py-4 font-black uppercase tracking-widest hover:bg-[#FFCC00] hover:text-[#111111] transition-all shadow-lg">
               Authenticate
             </button>
-            <p className="text-xs text-center text-gray-400 mt-4">Hint: admin123</p>
           </form>
         </div>
       </div>
@@ -102,16 +118,19 @@ const Admin: React.FC = () => {
   return (
     <div className="max-w-[1400px] mx-auto px-4 py-12">
       <div className="flex justify-between items-center mb-12">
-        <h1 className="text-4xl font-black uppercase tracking-tight">Fleet Command Center</h1>
-        <button onClick={() => setIsAuthenticated(false)} className="text-xs font-bold uppercase text-red-600 hover:underline">Log Out</button>
+        <div>
+            <h1 className="text-4xl font-black uppercase tracking-tight">Fleet Command Center</h1>
+            <p className="text-[10px] font-black text-[#FFCC00] uppercase tracking-[0.3em] mt-2">Industrial Content Management System</p>
+        </div>
+        <button onClick={() => setIsAuthenticated(false)} className="bg-red-600 text-white px-6 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">Terminate Session</button>
       </div>
 
-      <div className="flex space-x-1 bg-gray-100 p-1 mb-8 rounded-sm overflow-x-auto">
-        {(['equipment', 'parts', 'copy'] as const).map(tab => (
+      <div className="flex space-x-1 bg-gray-100 p-1 mb-10 rounded-sm overflow-x-auto shadow-inner">
+        {(['equipment', 'parts', 'categories', 'copy'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-3 px-6 text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-[#111111] text-white shadow-md' : 'text-gray-400 hover:text-gray-600'}`}
+            className={`flex-1 py-4 px-6 text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-[#111111] text-white shadow-xl scale-[1.02]' : 'text-gray-400 hover:text-gray-600'}`}
           >
             {tab} Management
           </button>
@@ -119,108 +138,105 @@ const Admin: React.FC = () => {
       </div>
 
       {activeTab === 'equipment' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Add Form */}
-          <div className="lg:col-span-1 bg-white p-6 shadow-xl border-t-4 border-[#FFCC00]">
-            <h2 className="text-lg font-black uppercase mb-6">Add New Asset</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Add New Asset Form */}
+          <div className="lg:col-span-4 bg-white p-8 shadow-xl border-t-4 border-[#FFCC00]">
+            <h2 className="text-xl font-black uppercase mb-8 tracking-tight">Onboard New Asset</h2>
             <form onSubmit={handleAddEquipment} className="space-y-4">
-              <input 
-                className="w-full border border-gray-200 p-3 text-sm font-bold" 
-                placeholder="Stock ID (e.g. E-2024-X)" 
-                value={newEq.id}
-                onChange={e => setNewEq({...newEq, id: e.target.value})}
-              />
+              <input className="w-full border-2 border-gray-100 p-3 text-sm font-bold focus:border-black outline-none" placeholder="Stock ID" value={newEq.id} onChange={e => setNewEq({...newEq, id: e.target.value})} />
               <div className="grid grid-cols-2 gap-4">
-                <input 
-                  className="w-full border border-gray-200 p-3 text-sm font-bold" 
-                  placeholder="Make" 
-                  value={newEq.make}
-                  onChange={e => setNewEq({...newEq, make: e.target.value})}
-                />
-                <input 
-                  className="w-full border border-gray-200 p-3 text-sm font-bold" 
-                  placeholder="Model" 
-                  value={newEq.model}
-                  onChange={e => setNewEq({...newEq, model: e.target.value})}
-                />
+                <input className="w-full border-2 border-gray-100 p-3 text-sm font-bold focus:border-black outline-none" placeholder="Make" value={newEq.make} onChange={e => setNewEq({...newEq, make: e.target.value})} />
+                <input className="w-full border-2 border-gray-100 p-3 text-sm font-bold focus:border-black outline-none" placeholder="Model" value={newEq.model} onChange={e => setNewEq({...newEq, model: e.target.value})} />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                 <input 
-                  className="w-full border border-gray-200 p-3 text-sm font-bold" 
-                  placeholder="Year" 
-                  type="number"
-                  value={newEq.year}
-                  onChange={e => setNewEq({...newEq, year: parseInt(e.target.value) || new Date().getFullYear()})}
-                />
-                <input 
-                  className="w-full border border-gray-200 p-3 text-sm font-bold" 
-                  placeholder="Price" 
-                  value={newEq.price}
-                  onChange={e => setNewEq({...newEq, price: e.target.value})}
-                />
+                <input type="number" className="w-full border-2 border-gray-100 p-3 text-sm font-bold focus:border-black outline-none" placeholder="Year" value={newEq.year} onChange={e => setNewEq({...newEq, year: parseInt(e.target.value)})} />
+                <input className="w-full border-2 border-gray-100 p-3 text-sm font-bold focus:border-black outline-none" placeholder="Price" value={newEq.price} onChange={e => setNewEq({...newEq, price: e.target.value})} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <input className="w-full border-2 border-gray-100 p-3 text-sm font-bold focus:border-black outline-none" placeholder="City" value={newEq.city} onChange={e => setNewEq({...newEq, city: e.target.value})} />
+                <input className="w-full border-2 border-gray-100 p-3 text-sm font-bold focus:border-black outline-none" placeholder="State" value={newEq.state} onChange={e => setNewEq({...newEq, state: e.target.value})} />
               </div>
               <select 
-                className="w-full border border-gray-200 p-3 text-sm font-bold uppercase"
+                className="w-full border-2 border-gray-100 p-3 text-sm font-bold focus:border-black outline-none uppercase"
                 value={newEq.category}
                 onChange={e => setNewEq({...newEq, category: e.target.value})}
               >
                 {categories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
               </select>
 
-              {/* AI Image Generation */}
-              <div className="bg-gray-50 p-4 border border-gray-200 mt-4">
-                <label className="text-[9px] font-black uppercase text-gray-400 block mb-2">AI Image Generator</label>
-                <div className="flex gap-2 mb-2">
-                  <input 
-                    className="w-full border border-gray-200 p-2 text-xs" 
-                    placeholder="Or describe a custom scene..."
-                    value={eqImagePrompt}
-                    onChange={e => setEqImagePrompt(e.target.value)}
-                  />
-                  <button 
-                    type="button" 
-                    onClick={generateImage}
-                    disabled={isGenerating}
-                    className="bg-[#111111] text-white px-3 py-2 text-[9px] font-black uppercase hover:bg-[#FFCC00] hover:text-black transition-all"
-                  >
-                    {isGenerating ? <i className="fas fa-spinner fa-spin"></i> : 'Gen'}
-                  </button>
+              <div className="bg-gray-50 p-4 border border-gray-200">
+                <label className="text-[10px] font-black uppercase text-gray-400 block mb-2">Inventory Image</label>
+                <div className="flex gap-2 mb-4">
+                    <input 
+                        className="flex-grow border-2 border-gray-100 p-2 text-xs font-bold focus:border-black outline-none" 
+                        placeholder="Image URL or AI prompt..."
+                        value={newEq.img || eqImagePrompt}
+                        onChange={e => {
+                            if (newEq.img) setNewEq({...newEq, img: e.target.value});
+                            else setEqImagePrompt(e.target.value);
+                        }}
+                    />
+                    <button 
+                        type="button" 
+                        onClick={generateImage}
+                        disabled={isGenerating}
+                        className="bg-[#111111] text-[#FFCC00] px-4 py-2 text-[10px] font-black uppercase hover:bg-[#FFCC00] hover:text-[#111111] transition-all disabled:opacity-50"
+                    >
+                        {isGenerating ? 'GEN...' : 'AI GEN'}
+                    </button>
                 </div>
-                {generationError && (
-                    <div className="mt-2 p-2 bg-red-100 text-red-700 text-xs font-bold border border-red-200">
-                        {generationError}
+                {newEq.img && (
+                    <div className="relative group">
+                        <img src={newEq.img} alt="Preview" className="w-full h-32 object-cover border border-gray-200" />
+                        <button 
+                            type="button" 
+                            onClick={() => setNewEq({...newEq, img: ''})}
+                            className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                        >
+                            <i className="fas fa-times"></i>
+                        </button>
                     </div>
                 )}
-                {newEq.img && !generationError && (
-                  <img src={newEq.img} alt="Generated" className="w-full aspect-[4/3] object-cover border border-gray-200 mt-2" />
-                )}
               </div>
-
-              <button className="w-full bg-[#FFCC00] text-[#111111] py-4 font-black uppercase tracking-widest hover:bg-[#111111] hover:text-white transition-all text-xs">
-                Add to Fleet
+              <button type="submit" className="w-full bg-[#111111] text-white py-4 font-black uppercase tracking-widest hover:bg-[#FFCC00] hover:text-[#111111] transition-all shadow-lg text-xs">
+                Authorize & Add Asset
               </button>
             </form>
           </div>
 
-          {/* List */}
-          <div className="lg:col-span-2 bg-white p-6 shadow-sm border border-gray-200 overflow-hidden">
-             <h2 className="text-lg font-black uppercase mb-6">Current Inventory ({equipment.length})</h2>
-             <div className="overflow-y-auto max-h-[600px] space-y-2">
+          {/* Active Inventory List */}
+          <div className="lg:col-span-8 bg-white p-8 border border-gray-200 shadow-sm overflow-hidden">
+             <h2 className="text-xl font-black uppercase mb-8 tracking-tight">Active Fleet Management ({equipment.length})</h2>
+             <div className="overflow-y-auto max-h-[800px] space-y-4">
                {equipment.map(item => (
-                 <div key={item.id} className="flex items-center justify-between p-4 border border-gray-100 hover:border-[#FFCC00] transition-colors group">
-                   <div className="flex items-center space-x-4">
-                      <img src={item.img} alt={item.model} className="w-16 h-12 object-cover bg-gray-100" />
+                 <div key={item.id} className="flex items-center justify-between p-6 border border-gray-100 hover:border-[#FFCC00] transition-colors group bg-gray-50/30">
+                   <div className="flex items-center space-x-6">
+                      <div className="relative cursor-pointer" onClick={() => handleUpdateImage('eq', item.id, item.img)}>
+                        <img src={item.img} alt={item.model} className="w-16 h-16 object-cover border border-gray-200" />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <i className="fas fa-camera text-white text-xs"></i>
+                        </div>
+                      </div>
                       <div>
-                        <div className="font-black text-sm uppercase">{item.year} {item.make} {item.model}</div>
-                        <div className="text-[10px] text-gray-400 font-mono">{item.id}</div>
+                        <div className="font-black text-sm uppercase tracking-tight">{item.year} {item.make} {item.model}</div>
+                        <div className="flex space-x-4 mt-1">
+                            <span className="text-[10px] text-gray-400 font-mono uppercase">ID: {item.id}</span>
+                            <span className="text-[10px] text-[#FFCC00] font-black uppercase">{item.category}</span>
+                        </div>
                       </div>
                    </div>
-                   <button 
-                    onClick={() => { if(window.confirm('Delete asset?')) deleteEquipment(item.id); }}
-                    className="text-gray-300 hover:text-red-600 transition-colors"
-                   >
-                     <i className="fas fa-trash"></i>
-                   </button>
+                   <div className="flex items-center space-x-4">
+                      <div className="text-right mr-4">
+                        <div className="text-xs font-black">{item.price}</div>
+                        <div className="text-[9px] text-gray-400 font-bold uppercase">{item.city}, {item.state}</div>
+                      </div>
+                      <button 
+                        onClick={() => { if(window.confirm('IRREVERSIBLE: Delete this asset from global inventory?')) deleteEquipment(item.id); }}
+                        className="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-600 hover:bg-red-50 transition-all rounded-full"
+                      >
+                        <i className="fas fa-trash-alt"></i>
+                      </button>
+                   </div>
                  </div>
                ))}
              </div>
@@ -229,52 +245,88 @@ const Admin: React.FC = () => {
       )}
 
       {activeTab === 'parts' && (
-         <div className="bg-white p-8 shadow-sm">
-            <h2 className="text-xl font-black uppercase mb-4">Parts Inventory Control</h2>
-            <p className="text-gray-500 mb-8">Management of {parts.length} SKU items.</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {parts.slice(0, 12).map((p, i) => (
-                    <div key={i} className="border p-4 flex justify-between items-center">
-                        <span className="font-bold text-sm">{p.part_number}</span>
-                        <button onClick={() => deletePart(p.part_number)} className="text-red-500 hover:text-red-700 text-xs uppercase font-bold">Delete</button>
+         <div className="bg-white p-10 shadow-sm border border-gray-200">
+            <h2 className="text-2xl font-black uppercase mb-8 tracking-tight">Parts Matrix Control</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {parts.map((p, i) => (
+                    <div key={i} className="border border-gray-100 p-6 flex justify-between items-center hover:shadow-md transition-shadow bg-gray-50/50">
+                        <div className="flex items-center space-x-4">
+                            <img 
+                                src={p.image} 
+                                alt={p.part_number} 
+                                className="w-10 h-10 object-contain bg-white border cursor-pointer" 
+                                onClick={() => handleUpdateImage('part', p.part_number, p.image)}
+                            />
+                            <div>
+                                <div className="font-black text-xs">{p.part_number}</div>
+                                <div className="text-[9px] text-gray-400 uppercase font-bold truncate max-w-[150px]">{p.description}</div>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => { if(window.confirm('Delete part SKU?')) deletePart(p.part_number); }} 
+                            className="text-gray-300 hover:text-red-600 transition-colors p-2"
+                        >
+                            <i className="fas fa-trash-can text-sm"></i>
+                        </button>
                     </div>
                 ))}
-            </div>
-            <div className="mt-8 p-4 bg-gray-50 text-center text-xs text-gray-500 font-mono">
-                Showing first 12 items. Full database management available in enterprise dashboard.
             </div>
          </div>
       )}
 
+      {activeTab === 'categories' && (
+          <div className="bg-white p-10 shadow-sm border border-gray-200">
+            <h2 className="text-2xl font-black uppercase mb-8 tracking-tight">Machine Categories</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                {categories.map((cat, i) => (
+                    <div key={i} className="border border-gray-100 overflow-hidden group">
+                        <div className="aspect-video relative overflow-hidden bg-gray-50 p-4">
+                            <img src={cat.img} alt={cat.name} className="w-full h-full object-contain group-hover:scale-110 transition-transform" />
+                            <button 
+                                onClick={() => handleUpdateImage('cat', cat.name, cat.img)}
+                                className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-black uppercase tracking-widest transition-opacity"
+                            >
+                                Update Visual
+                            </button>
+                        </div>
+                        <div className="p-4 bg-gray-50">
+                            <div className="font-black text-xs uppercase text-[#111111]">{cat.name}</div>
+                            <div className="text-[9px] text-gray-400 font-bold uppercase mt-1">{cat.primaryApplication}</div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+          </div>
+      )}
+
       {activeTab === 'copy' && (
-        <div className="max-w-2xl bg-white p-8 shadow-xl border-t-4 border-black">
-          <h2 className="text-xl font-black uppercase mb-6">Site Content Management</h2>
-          <div className="space-y-6">
+        <div className="max-w-4xl bg-white p-12 shadow-2xl border-t-8 border-black">
+          <h2 className="text-2xl font-black uppercase mb-10 tracking-tight">Enterprise Content Command</h2>
+          <div className="space-y-10">
             <div>
-              <label className="block text-[10px] font-black uppercase text-gray-400 mb-2">Hero Title</label>
+              <label className="block text-[10px] font-black uppercase text-gray-400 mb-4 tracking-[0.2em]">Home Hero Headline</label>
               <textarea 
-                className="w-full border border-gray-200 p-4 text-lg font-black" 
+                className="w-full border-2 border-gray-100 p-6 text-2xl font-black uppercase tracking-tight focus:border-[#FFCC00] outline-none transition-colors" 
                 rows={2}
                 value={copy.homeHeroTitle}
                 onChange={(e) => updateCopy({ homeHeroTitle: e.target.value })}
               />
             </div>
             <div>
-              <label className="block text-[10px] font-black uppercase text-gray-400 mb-2">Hero Subtitle</label>
+              <label className="block text-[10px] font-black uppercase text-gray-400 mb-4 tracking-[0.2em]">Home Hero Description</label>
               <textarea 
-                className="w-full border border-gray-200 p-4 font-medium" 
-                rows={3}
+                className="w-full border-2 border-gray-100 p-6 text-lg font-medium leading-relaxed text-gray-600 focus:border-[#FFCC00] outline-none transition-colors" 
+                rows={4}
                 value={copy.homeHeroSubtitle}
                 onChange={(e) => updateCopy({ homeHeroSubtitle: e.target.value })}
               />
             </div>
-             <div className="p-4 bg-green-50 text-green-800 text-xs font-bold uppercase border border-green-200 flex items-center">
-                <i className="fas fa-check-circle mr-2"></i> Changes autosaved to local storage
+             <div className="p-6 bg-[#fffbeb] text-[#92400e] text-[10px] font-black uppercase border-l-8 border-[#f59e0b] tracking-widest flex items-center shadow-sm">
+                <i className="fas fa-info-circle mr-4 text-lg"></i> SYSTEM NOTE: Changes are persisted to local deployment storage.
              </div>
           </div>
         </div>
       )}
-
     </div>
   );
 };

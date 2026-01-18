@@ -173,12 +173,27 @@ const Equipment: React.FC = () => {
 
                 {/* Info Area */}
                 <div className="p-8 border-t border-gray-100 flex-grow flex flex-col bg-white">
-                  {cat.icon && (
-                    <i className={`fas ${cat.icon} text-2xl text-[#FFCC00] mb-4`}></i>
-                  )}
-                  <h3 className="text-xl font-black text-[#111111] uppercase tracking-tighter mb-4 group-hover:text-[#FFCC00] transition-colors leading-none">
+                  <div className="flex justify-between items-start mb-4">
+                    {cat.icon && (
+                        <i className={`fas ${cat.icon} text-2xl text-[#FFCC00]`}></i>
+                    )}
+                    <span className="bg-[#111111] text-white text-[8px] font-black uppercase px-2 py-1 tracking-widest rounded-sm">
+                        {categoryStats[cat.name] || 0} UNITS
+                    </span>
+                  </div>
+                  
+                  <h3 className="text-xl font-black text-[#111111] uppercase tracking-tighter mb-2 group-hover:text-[#FFCC00] transition-colors leading-none">
                     {cat.name}
                   </h3>
+
+                  {/* Enhanced Context: Primary Application Tag */}
+                  {cat.primaryApplication && (
+                    <div className="mb-4">
+                        <span className="text-[9px] font-black uppercase text-[#FFCC00] bg-gray-50 border border-gray-100 px-2 py-0.5 tracking-wider">
+                            {cat.primaryApplication}
+                        </span>
+                    </div>
+                  )}
                   
                   <p className="text-[12px] text-gray-500 font-bold leading-relaxed mb-8 flex-grow uppercase tracking-tight">
                     {cat.description}

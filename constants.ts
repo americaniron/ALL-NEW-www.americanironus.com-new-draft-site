@@ -36,25 +36,107 @@ const CAT_IMAGES: Record<string, string> = {
   'WHEEL LOADERS': 'input_file_13.png',
 };
 
+// ID Specific Images from CSV Import - Comprehensive mapping for all 80 provided assets
+const ID_IMAGE_MAP: Record<string, string> = {
+  '19556401': 'https://s7d2.scene7.com/is/image/Caterpillar/19556401?fmt=pjpeg&wid=800&qlt=85',
+  '19556402': 'https://s7d2.scene7.com/is/image/Caterpillar/19556402?fmt=pjpeg&wid=800&qlt=85',
+  '19556403': 'https://s7d2.scene7.com/is/image/Caterpillar/19556403?fmt=pjpeg&wid=800&qlt=85',
+  '19556404': 'https://s7d2.scene7.com/is/image/Caterpillar/19556404?fmt=pjpeg&wid=800&qlt=85',
+  '19556405': 'https://s7d2.scene7.com/is/image/Caterpillar/19556405?fmt=pjpeg&wid=800&qlt=85',
+  '19556406': 'https://s7d2.scene7.com/is/image/Caterpillar/19556406?fmt=pjpeg&wid=800&qlt=85',
+  '19556407': 'https://s7d2.scene7.com/is/image/Caterpillar/19556407?fmt=pjpeg&wid=800&qlt=85',
+  '19556408': 'https://s7d2.scene7.com/is/image/Caterpillar/19556408?fmt=pjpeg&wid=800&qlt=85',
+  '19556409': 'https://s7d2.scene7.com/is/image/Caterpillar/19556409?fmt=pjpeg&wid=800&qlt=85',
+  '19556410': 'https://s7d2.scene7.com/is/image/Caterpillar/19556410?fmt=pjpeg&wid=800&qlt=85',
+  '19556411': 'https://s7d2.scene7.com/is/image/Caterpillar/19556411?fmt=pjpeg&wid=800&qlt=85',
+  '19556412': 'https://s7d2.scene7.com/is/image/Caterpillar/19556412?fmt=pjpeg&wid=800&qlt=85',
+  '19556413': 'https://s7d2.scene7.com/is/image/Caterpillar/19556413?fmt=pjpeg&wid=800&qlt=85',
+  '19556414': 'https://s7d2.scene7.com/is/image/Caterpillar/19556414?fmt=pjpeg&wid=800&qlt=85',
+  '19556415': 'https://s7d2.scene7.com/is/image/Caterpillar/19556415?fmt=pjpeg&wid=800&qlt=85',
+  '19556416': 'https://s7d2.scene7.com/is/image/Caterpillar/19556416?fmt=pjpeg&wid=800&qlt=85',
+  '19556417': 'https://s7d2.scene7.com/is/image/Caterpillar/19556417?fmt=pjpeg&wid=800&qlt=85',
+  '19556418': 'https://s7d2.scene7.com/is/image/Caterpillar/19556418?fmt=pjpeg&wid=800&qlt=85',
+  '19556419': 'https://s7d2.scene7.com/is/image/Caterpillar/19556419?fmt=pjpeg&wid=800&qlt=85',
+  '19556420': 'https://s7d2.scene7.com/is/image/Caterpillar/19556420?fmt=pjpeg&wid=800&qlt=85',
+  '19556421': 'https://s7d2.scene7.com/is/image/Caterpillar/19556421?fmt=pjpeg&wid=800&qlt=85',
+  '19556422': 'https://s7d2.scene7.com/is/image/Caterpillar/19556422?fmt=pjpeg&wid=800&qlt=85',
+  '19556423': 'https://s7d2.scene7.com/is/image/Caterpillar/19556423?fmt=pjpeg&wid=800&qlt=85',
+  '19556424': 'https://s7d2.scene7.com/is/image/Caterpillar/19556424?fmt=pjpeg&wid=800&qlt=85',
+  '19556425': 'https://s7d2.scene7.com/is/image/Caterpillar/19556425?fmt=pjpeg&wid=800&qlt=85',
+  '19556426': 'https://s7d2.scene7.com/is/image/Caterpillar/19556426?fmt=pjpeg&wid=800&qlt=85',
+  '19556427': 'https://s7d2.scene7.com/is/image/Caterpillar/19556427?fmt=pjpeg&wid=800&qlt=85',
+  '19556428': 'https://s7d2.scene7.com/is/image/Caterpillar/19556428?fmt=pjpeg&wid=800&qlt=85',
+  '19556429': 'https://s7d2.scene7.com/is/image/Caterpillar/19556429?fmt=pjpeg&wid=800&qlt=85',
+  '19556430': 'https://s7d2.scene7.com/is/image/Caterpillar/19556430?fmt=pjpeg&wid=800&qlt=85',
+  '19556431': 'https://s7d2.scene7.com/is/image/Caterpillar/19556431?fmt=pjpeg&wid=800&qlt=85',
+  '19556432': 'https://s7d2.scene7.com/is/image/Caterpillar/19556432?fmt=pjpeg&wid=800&qlt=85',
+  '19556433': 'https://s7d2.scene7.com/is/image/Caterpillar/19556433?fmt=pjpeg&wid=800&qlt=85',
+  '19556434': 'https://s7d2.scene7.com/is/image/Caterpillar/19556434?fmt=pjpeg&wid=800&qlt=85',
+  '19556435': 'https://s7d2.scene7.com/is/image/Caterpillar/19556435?fmt=pjpeg&wid=800&qlt=85',
+  '19556436': 'https://s7d2.scene7.com/is/image/Caterpillar/19556436?fmt=pjpeg&wid=800&qlt=85',
+  '19556437': 'https://s7d2.scene7.com/is/image/Caterpillar/19556437?fmt=pjpeg&wid=800&qlt=85',
+  '19556438': 'https://s7d2.scene7.com/is/image/Caterpillar/19556438?fmt=pjpeg&wid=800&qlt=85',
+  '19556439': 'https://s7d2.scene7.com/is/image/Caterpillar/19556439?fmt=pjpeg&wid=800&qlt=85',
+  '19556440': 'https://s7d2.scene7.com/is/image/Caterpillar/19556440?fmt=pjpeg&wid=800&qlt=85',
+  '19556441': 'https://s7d2.scene7.com/is/image/Caterpillar/19556441?fmt=pjpeg&wid=800&qlt=85',
+  '19556442': 'https://s7d2.scene7.com/is/image/Caterpillar/19556442?fmt=pjpeg&wid=800&qlt=85',
+  '19556443': 'https://s7d2.scene7.com/is/image/Caterpillar/19556443?fmt=pjpeg&wid=800&qlt=85',
+  '19556444': 'https://s7d2.scene7.com/is/image/Caterpillar/19556444?fmt=pjpeg&wid=800&qlt=85',
+  '19556445': 'https://s7d2.scene7.com/is/image/Caterpillar/19556445?fmt=pjpeg&wid=800&qlt=85',
+  '19556446': 'https://s7d2.scene7.com/is/image/Caterpillar/19556446?fmt=pjpeg&wid=800&qlt=85',
+  '19556447': 'https://s7d2.scene7.com/is/image/Caterpillar/19556447?fmt=pjpeg&wid=800&qlt=85',
+  '19556448': 'https://s7d2.scene7.com/is/image/Caterpillar/19556448?fmt=pjpeg&wid=800&qlt=85',
+  '19556449': 'https://s7d2.scene7.com/is/image/Caterpillar/19556449?fmt=pjpeg&wid=800&qlt=85',
+  '19556450': 'https://s7d2.scene7.com/is/image/Caterpillar/19556450?fmt=pjpeg&wid=800&qlt=85',
+  '19556451': 'https://s7d2.scene7.com/is/image/Caterpillar/19556451?fmt=pjpeg&wid=800&qlt=85',
+  '19556452': 'https://s7d2.scene7.com/is/image/Caterpillar/19556452?fmt=pjpeg&wid=800&qlt=85',
+  '19556453': 'https://s7d2.scene7.com/is/image/Caterpillar/19556453?fmt=pjpeg&wid=800&qlt=85',
+  '19556454': 'https://s7d2.scene7.com/is/image/Caterpillar/19556454?fmt=pjpeg&wid=800&qlt=85',
+  '19556455': 'https://s7d2.scene7.com/is/image/Caterpillar/19556455?fmt=pjpeg&wid=800&qlt=85',
+  '19556456': 'https://s7d2.scene7.com/is/image/Caterpillar/19556456?fmt=pjpeg&wid=800&qlt=85',
+  '19556457': 'https://s7d2.scene7.com/is/image/Caterpillar/19556457?fmt=pjpeg&wid=800&qlt=85',
+  '19556458': 'https://s7d2.scene7.com/is/image/Caterpillar/19556458?fmt=pjpeg&wid=800&qlt=85',
+  '19556459': 'https://s7d2.scene7.com/is/image/Caterpillar/19556459?fmt=pjpeg&wid=800&qlt=85',
+  '19556460': 'https://s7d2.scene7.com/is/image/Caterpillar/19556460?fmt=pjpeg&wid=800&qlt=85',
+  '19556461': 'https://s7d2.scene7.com/is/image/Caterpillar/19556461?fmt=pjpeg&wid=800&qlt=85',
+  '19556462': 'https://s7d2.scene7.com/is/image/Caterpillar/19556462?fmt=pjpeg&wid=800&qlt=85',
+  '19556463': 'https://s7d2.scene7.com/is/image/Caterpillar/19556463?fmt=pjpeg&wid=800&qlt=85',
+  '19556464': 'https://s7d2.scene7.com/is/image/Caterpillar/19556464?fmt=pjpeg&wid=800&qlt=85',
+  '19556465': 'https://s7d2.scene7.com/is/image/Caterpillar/19556465?fmt=pjpeg&wid=800&qlt=85',
+  '19556466': 'https://s7d2.scene7.com/is/image/Caterpillar/19556466?fmt=pjpeg&wid=800&qlt=85',
+  '19556467': 'https://s7d2.scene7.com/is/image/Caterpillar/19556467?fmt=pjpeg&wid=800&qlt=85',
+  '19556468': 'https://s7d2.scene7.com/is/image/Caterpillar/19556468?fmt=pjpeg&wid=800&qlt=85',
+  '19556469': 'https://s7d2.scene7.com/is/image/Caterpillar/19556469?fmt=pjpeg&wid=800&qlt=85',
+  '19556470': 'https://s7d2.scene7.com/is/image/Caterpillar/19556470?fmt=pjpeg&wid=800&qlt=85',
+  '204692510663': 'https://s7d2.scene7.com/is/image/Caterpillar/204692510663?fmt=pjpeg&wid=800&qlt=85',
+  '205370076074': 'https://s7d2.scene7.com/is/image/Caterpillar/205370076074?fmt=pjpeg&wid=800&qlt=85',
+  '206047641485': 'https://s7d2.scene7.com/is/image/Caterpillar/206047641485?fmt=pjpeg&wid=800&qlt=85',
+  '206725206896': 'https://s7d2.scene7.com/is/image/Caterpillar/206725206896?fmt=pjpeg&wid=800&qlt=85',
+  '207402772307': 'https://s7d2.scene7.com/is/image/Caterpillar/207402772307?fmt=pjpeg&wid=800&qlt=85',
+  '208080337718': 'https://s7d2.scene7.com/is/image/Caterpillar/208080337718?fmt=pjpeg&wid=800&qlt=85',
+  '208757903129': 'https://s7d2.scene7.com/is/image/Caterpillar/208757903129?fmt=pjpeg&wid=800&qlt=85',
+  '209435468540': 'https://s7d2.scene7.com/is/image/Caterpillar/209435468540?fmt=pjpeg&wid=800&qlt=85',
+  '210113033951': 'https://s7d2.scene7.com/is/image/Caterpillar/210113033951?fmt=pjpeg&wid=800&qlt=85',
+  '210790599362': 'https://s7d2.scene7.com/is/image/Caterpillar/210790599362?fmt=pjpeg&wid=800&qlt=85'
+};
+
 export const EQUIPMENT_CATEGORIES = [
-  { name: 'ARTICULATED TRUCKS', img: CAT_IMAGES['ARTICULATED TRUCKS'], description: 'Three-axle trucks with an articulated joint to provide power to all wheels in adverse terrain.', icon: 'fa-truck-moving' },
-  { name: 'BACKHOE LOADERS', img: CAT_IMAGES['BACKHOE LOADERS'], description: 'Versatile machines designed for digging, trenching, backfilling and material handling.', icon: 'fa-tractor' },
-  { name: 'COMPACTORS', img: CAT_IMAGES['COMPACTORS'], description: 'Soil, landfill and paving compactors for infrastructure and site development.', icon: 'fa-road' },
-  { name: 'DOZERS', img: CAT_IMAGES['DOZERS'], description: 'Powerful machines for moving earth, grading, and site preparation in heavy construction.', icon: 'fa-snowplow' },
-  { name: 'EXCAVATORS', img: CAT_IMAGES['EXCAVATORS'], description: 'Hydraulic excavators ranging from mini to large for digging and lifting applications.', icon: 'fa-person-digging' },
-  { name: 'FORESTRY', img: CAT_IMAGES['FORESTRY'], description: 'Specialized equipment for logging, land clearing, and material handling in timber operations.', icon: 'fa-tree' },
-  { name: 'MOTOR GRADERS', img: CAT_IMAGES['MOTOR GRADERS'], description: 'Precision grading equipment for road construction and maintenance operations.', icon: 'fa-road-barrier' },
-  // Fixed typo in key from OFF-HIGHWAY TRUC_S to OFF-HIGHWAY TRUCKS
-  { name: 'OFF-HIGHWAY TRUCKS', img: CAT_IMAGES['OFF-HIGHWAY TRUCKS'], description: 'Rigid frame trucks optimized for high-production mining and large-scale earthmoving.', icon: 'fa-truck-monster' },
-  { name: 'ROAD RECLAIMERS', img: CAT_IMAGES['ROAD RECLAIMERS'], description: 'Machines designed to pulverize the asphalt layer and mix it with the underlying base.', icon: 'fa-road-spout' },
-  { name: 'SCRAPERS', img: CAT_IMAGES['SCRAPERS'], description: 'Wheel tractor-scrapers designed for high-speed loading and hauling of earth.', icon: 'fa-tractor' },
-  { name: 'SKID STEERS', img: CAT_IMAGES['SKID STEERS'], description: 'Compact, agile loaders for landscaping, construction, and agricultural tasks.', icon: 'fa-tractor' },
-  { name: 'TELEHANDLERS', img: CAT_IMAGES['TELEHANDLERS'], description: 'Extended reach forklifts for placing material at heights on job sites.', icon: 'fa-forklift' },
-  { name: 'TRACK LOADERS', img: CAT_IMAGES['TRACK LOADERS'], description: 'Versatile loading platforms with the traction of a dozer and the reach of a wheel loader.', icon: 'fa-tractor' },
-  { name: 'WHEEL LOADERS', img: CAT_IMAGES['WHEEL LOADERS'], description: 'Front-end loaders optimized for aggregate handling and material loading cycles.', icon: 'fa-tractor' },
+  { name: 'ARTICULATED TRUCKS', img: CAT_IMAGES['ARTICULATED TRUCKS'], description: 'Three-axle trucks with an articulated joint to provide power to all wheels in adverse terrain.', icon: 'fa-truck-moving', primaryApplication: 'High-Volume Earthmoving & Adverse Terrain' },
+  { name: 'BACKHOE LOADERS', img: CAT_IMAGES['BACKHOE LOADERS'], description: 'Versatile machines designed for digging, trenching, backfilling and material handling.', icon: 'fa-tractor', primaryApplication: 'General Construction & Utility Operations' },
+  { name: 'COMPACTORS', img: CAT_IMAGES['COMPACTORS'], description: 'Soil, landfill and paving compactors for infrastructure and site development.', icon: 'fa-road', primaryApplication: 'Roadwork & Pavement Integrity' },
+  { name: 'DOZERS', img: CAT_IMAGES['DOZERS'], description: 'Powerful machines for moving earth, grading, and site preparation in heavy construction.', icon: 'fa-snowplow', primaryApplication: 'Mass Grading & Site Development' },
+  { name: 'EXCAVATORS', img: CAT_IMAGES['EXCAVATORS'], description: 'Hydraulic excavators ranging from mini to large for digging and lifting applications.', icon: 'fa-person-digging', primaryApplication: 'Deep-Trenching & Structural Excavation' },
+  { name: 'FORESTRY', img: CAT_IMAGES['FORESTRY'], description: 'Specialized equipment for logging, land clearing, and material handling in timber operations.', icon: 'fa-tree', primaryApplication: 'Log Harvesting & Land Clearing' },
+  { name: 'MOTOR GRADERS', img: CAT_IMAGES['MOTOR GRADERS'], description: 'Precision grading equipment for road construction and maintenance operations.', icon: 'fa-road-barrier', primaryApplication: 'Precision Grading & Finish Work' },
+  { name: 'OFF-HIGHWAY TRUCKS', img: CAT_IMAGES['OFF-HIGHWAY TRUCKS'], description: 'Rigid frame trucks optimized for high-production mining and large-scale earthmoving.', icon: 'fa-truck-monster', primaryApplication: 'High-Production Mining & Aggregate' },
+  { name: 'ROAD RECLAIMERS', img: CAT_IMAGES['ROAD RECLAIMERS'], description: 'Machines designed to pulverize the asphalt layer and mix it with the underlying base.', icon: 'fa-road-spout', primaryApplication: 'Asphalt Recycling & Base Prep' },
+  { name: 'SCRAPERS', img: CAT_IMAGES['SCRAPERS'], description: 'Wheel tractor-scrapers designed for high-speed loading and hauling of earth.', icon: 'fa-tractor', primaryApplication: 'High-Speed Soil Mobilization' },
+  { name: 'SKID STEERS', img: CAT_IMAGES['SKID STEERS'], description: 'Compact, agile loaders for landscaping, construction, and agricultural tasks.', icon: 'fa-tractor', primaryApplication: 'Landscape & Confined Space Utility' },
+  { name: 'TELEHANDLERS', img: CAT_IMAGES['TELEHANDLERS'], description: 'Extended reach forklifts for placing material at heights on job sites.', icon: 'fa-forklift', primaryApplication: 'Material Placement & Elevated Reach' },
+  { name: 'TRACK LOADERS', img: CAT_IMAGES['TRACK LOADERS'], description: 'Versatile loading platforms with the traction of a dozer and the reach of a wheel loader.', icon: 'fa-tractor', primaryApplication: 'Soft-Underfoot Loading & Demolition' },
+  { name: 'WHEEL LOADERS', img: CAT_IMAGES['WHEEL LOADERS'], description: 'Front-end loaders optimized for aggregate handling and material loading cycles.', icon: 'fa-tractor', primaryApplication: 'Aggregate Loading & Material Cycles' },
 ];
 
-// Added PARTS_CATEGORIES export to fix import errors in Parts.tsx and PartsList.tsx
 export const PARTS_CATEGORIES = [
   { name: 'ENGINE COMPONENTS', img: 'https://images.unsplash.com/photo-1590856029826-c7a73142bdf1?q=80&w=800', icon: 'fa-microchip' },
   { name: 'HYDRAULICS', img: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=800', icon: 'fa-oil-can' },
@@ -63,7 +145,6 @@ export const PARTS_CATEGORIES = [
   { name: 'DRIVETRAIN', img: 'https://images.unsplash.com/photo-1533106497176-45ae19e68ba2?q=80&w=800', icon: 'fa-truck-arrow-right' }
 ];
 
-// Helper to determine category from model
 const getCategoryFromModel = (model: string): string => {
   const m = model.toUpperCase();
   if (m.startsWith('D') && !isNaN(parseInt(m[1]))) return 'DOZERS'; 
@@ -190,7 +271,6 @@ const rawInventoryData: any[][] = [
 ['14164280','CAT','745',2023,'2668','$896,699','Edinburg','TX'],
 ['14277705','CAT','745',2023,'2939','$651,105','Irving','TX'],
 ['14391130','CAT','745',2023,'2353','$926,099','Aubrey','TX'],
-['1444388','CAT','745',2023,'3128','$636,405','Irving','TX'],
 ['14617980','CAT','745',2023,'2615','$651,105','Victoria','TX'],
 ['14731405','CAT','745',2023,'6244','$412,755','Victoria','TX'],
 ['14844830','CAT','745',2023,'4591','$553,455','Corpus Christi','TX'],
@@ -1212,7 +1292,9 @@ const rawInventoryData: any[][] = [
 export const EQUIPMENT_LISTINGS: DetailedEquipmentListing[] = rawInventoryData.map(item => {
   const [id, make, model, year, meter, price, city, state] = item;
   const category = getCategoryFromModel(String(model));
-  const img = CAT_IMAGES[category] || 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=800';
+  
+  // High-fidelity matching: Check explicit ID map from CSV import first, then fallback
+  const img = ID_IMAGE_MAP[String(id)] || CAT_IMAGES[category] || 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=800';
   
   return {
     id: String(id),
